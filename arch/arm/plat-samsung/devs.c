@@ -53,6 +53,7 @@
 #include <plat/keypad.h>
 #include <plat/mci.h>
 #include <plat/nand.h>
+#include <plat/ohci.h>
 #include <plat/sdhci.h>
 #include <plat/ts.h>
 #include <plat/udc.h>
@@ -1396,6 +1397,39 @@ void __init s5p_ehci_set_platdata(struct s5p_ehci_platdata *pd)
 		npd->phy_exit = s5p_usb_phy_exit;
 }
 #endif /* CONFIG_S5P_DEV_USB_EHCI */
+
+#ifdef CONFIG_S5P_DEV_USB_OHCI
+static struct resource s5p_ohci_resource[] = {
+	[0] = DEFINE_RES_MEM(S5P_PA_OHCI, SZ_256),
+	[1] = DEFINE_RES_IRQ(IRQ_USB_HOST),
+};
+
+static u64 s5p_device_ohci_dmamask = 0xffffffffUL;
+
+struct platform_device s5p_device_ohci = {
+	.name		= "s5p-ohci",
+	.id		= -1,
+	.num_resources	= ARRAY_SIZE(s5p_ohci_resource),
+	.resource	= s5p_ohci_resource,
+	.dev		= {
+		.dma_mask		= &s5p_device_ohci_dmamask,
+		.coherent_dma_mask	= DMA_BIT_MASK(32),
+	}
+};
+
+void __init s5p_ohci_set_platdata(struct s5p_ohci_platdata *pd)
+{
+	struct s5p_ohci_platdata *npd;
+
+	npd = s3c_set_platdata(pd, sizeof(struct s5p_ohci_platdata),
+			&s5p_device_ohci);
+
+	if (!npd->phy_init)
+		npd->phy_init = s5p_usb_phy_init;
+	if (!npd->phy_exit)
+		npd->phy_exit = s5p_usb_phy_exit;
+}
+#endif /* CONFIG_S5P_DEV_USB_OHCI */
 
 /* USB HSOTG */
 
