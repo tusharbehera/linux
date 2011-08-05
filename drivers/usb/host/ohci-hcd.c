@@ -1119,6 +1119,11 @@ MODULE_LICENSE ("GPL");
 #define PLATFORM_DRIVER		ohci_xls_driver
 #endif
 
+#ifdef CONFIG_ARCH_EXYNOS4
+#include "ohci-s5p.c"
+#define PLATFORM_DRIVER		ohci_hcd_s5pv210_driver
+#endif
+
 #if	!defined(PCI_DRIVER) &&		\
 	!defined(PLATFORM_DRIVER) &&	\
 	!defined(OMAP1_PLATFORM_DRIVER) &&	\

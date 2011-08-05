@@ -598,3 +598,9 @@ config USB_PXA168_EHCI
 	help
 	  Enable support for Marvell PXA168 SoC's on-chip EHCI
 	  host controller
+
+config USB_OHCI_S5P
+	boolean "S5P OHCI support"
+	depends on USB_OHCI_HCD && PLAT_S5P
+	help
+	  Enable support for the S5P SOC's on-chip OHCI controller.
