@@ -32,6 +32,7 @@
 #include "common.h"
 
 static struct sleep_save exynos4_clock_save[] = {
+	SAVE_ITEM(S5P_CLKSRC_AUDSS),
 	SAVE_ITEM(S5P_CLKDIV_LEFTBUS),
 	SAVE_ITEM(S5P_CLKGATE_IP_LEFTBUS),
 	SAVE_ITEM(S5P_CLKDIV_RIGHTBUS),
