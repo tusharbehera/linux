@@ -1477,5 +1477,9 @@ struct platform_device s5p_device_jpeg = {
 	.id		= -1,
 	.num_resources	= ARRAY_SIZE(s5p_jpeg_resource),
 	.resource	= s5p_jpeg_resource,
+	.dev		= {
+		.dma_mask		= &samsung_device_dma_mask,
+		.coherent_dma_mask	= DMA_BIT_MASK(32),
+	},
 };
 #endif
