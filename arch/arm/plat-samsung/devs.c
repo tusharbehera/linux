@@ -1457,3 +1457,25 @@ struct platform_device s3c_device_wdt = {
 	.resource	= s3c_wdt_resource,
 };
 #endif /* CONFIG_S3C_DEV_WDT */
+
+#ifdef CONFIG_VIDEO_JPEG
+static struct resource s5p_jpeg_resource[] = {
+	[0] = {
+		.start	= S5P_PA_JPEG,
+		.end	= S5P_PA_JPEG + S5P_SZ_JPEG - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= IRQ_JPEG,
+		.end	= IRQ_JPEG,
+		.flags	= IORESOURCE_IRQ,
+	}
+};
+
+struct platform_device s5p_device_jpeg = {
+	.name		= "s5p-jpeg",
+	.id		= -1,
+	.num_resources	= ARRAY_SIZE(s5p_jpeg_resource),
+	.resource	= s5p_jpeg_resource,
+};
+#endif
