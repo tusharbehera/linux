@@ -24,25 +24,23 @@
 #define APP_START_CLK (1<<21)
 
 struct s5p_ohci_hcd {
-        struct device *dev;
-        struct usb_hcd *hcd;
-        struct clk *clk;
+	struct device *dev;
+	struct usb_hcd *hcd;
+	struct clk *clk;
 };
 
 static void ohci_s5pv210_set_clock(int start_clk);
 #ifdef CONFIG_PM
-static int ohci_hcd_s5pv210_drv_suspend(
-	struct platform_device *pdev,
-	pm_message_t message
-){
+static int ohci_hcd_s5pv210_drv_suspend(struct platform_device *pdev,
+							pm_message_t message)
+{
 	struct s5p_ohci_platdata *pdata = pdev->dev.platform_data;
 	struct s5p_ohci_hcd *s5p_ohci = platform_get_drvdata(pdev);
-        struct usb_hcd *hcd = s5p_ohci->hcd;
-	struct ohci_hcd	*ohci = hcd_to_ohci(hcd);
+	struct usb_hcd *hcd = s5p_ohci->hcd;
+	struct ohci_hcd *ohci = hcd_to_ohci(hcd);
 	unsigned long flags;
 	int rc = 0;
 
-	
 	if (!pdata) {
 		dev_err(&pdev->dev, "No platform data defined\n");
 		return -EINVAL;
@@ -78,19 +76,18 @@ bail:
 static int ohci_hcd_s5pv210_drv_resume(struct platform_device *pdev)
 {
 	struct s5p_ohci_platdata *pdata = pdev->dev.platform_data;
-        struct s5p_ohci_hcd *s5p_ohci = platform_get_drvdata(pdev);
-        struct usb_hcd *hcd = s5p_ohci->hcd;
+	struct s5p_ohci_hcd *s5p_ohci = platform_get_drvdata(pdev);
+	struct usb_hcd *hcd = s5p_ohci->hcd;
 	int rc = 0;
 
-	
 	if (!pdata) {
 		dev_err(&pdev->dev, "No platform data defined\n");
 		return -EINVAL;
 	}
 
 	rc = clk_enable(s5p_ohci->clk);
-	if(rc)
-	  return rc;	
+	if (rc)
+		return rc;
 	if (pdata->phy_init)
 		pdata->phy_init(pdev, S5P_USB_PHY_HOST);
 
@@ -129,7 +126,7 @@ static int ohci_s5pv210_init(struct usb_hcd *hcd)
 }
 static int __devinit ohci_s5pv210_start(struct usb_hcd *hcd)
 {
-	struct ohci_hcd	*ohci = hcd_to_ohci(hcd);
+	struct ohci_hcd *ohci = hcd_to_ohci(hcd);
 	int ret;
 
 	ohci_dbg(ohci, "ohci_s5pv210_start, ohci:%p", ohci);
@@ -152,7 +149,7 @@ static const struct hc_driver ohci_s5pv210_hc_driver = {
 	.hcd_priv_size		= sizeof(struct ohci_hcd),
 
 	.irq			= ohci_irq,
-	.flags 			= HCD_USB11 | HCD_MEMORY,
+	.flags			= HCD_USB11 | HCD_MEMORY,
 
 	.reset			= ohci_s5pv210_init,
 	.start			= ohci_s5pv210_start,
@@ -176,7 +173,7 @@ static const struct hc_driver ohci_s5pv210_hc_driver = {
 	 */
 	.hub_status_data	= ohci_hub_status_data,
 	.hub_control		= ohci_hub_control,
-#ifdef	CONFIG_PM
+#ifdef CONFIG_PM
 	.bus_suspend		= ohci_s5pv210_bus_suspend,
 	.bus_resume		= ohci_s5pv210_bus_resume,
 #endif
@@ -187,7 +184,7 @@ static int __devinit ohci_hcd_s5pv210_drv_probe(struct platform_device *pdev)
 {
 	struct s5p_ohci_platdata *pdata;
 	struct s5p_ohci_hcd *s5p_ohci;
-	struct usb_hcd  *hcd = NULL;
+	struct usb_hcd *hcd = NULL;
 	struct resource *res;
 	int retval = 0;
 	int irq;
@@ -200,39 +197,40 @@ static int __devinit ohci_hcd_s5pv210_drv_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "No platform data defined\n");
 		return -EINVAL;
 	}
-	
-	s5p_ohci = kzalloc(sizeof(struct s5p_ohci_hcd), GFP_KERNEL);
-	if(!s5p_ohci)
-		return -ENOMEM;
-	
-	s5p_ohci->dev = &pdev->dev;		
 
-	hcd = usb_create_hcd(&ohci_s5pv210_hc_driver, &pdev->dev, dev_name(&pdev->dev));
+	s5p_ohci = kzalloc(sizeof(struct s5p_ohci_hcd), GFP_KERNEL);
+	if (!s5p_ohci)
+		return -ENOMEM;
+
+	s5p_ohci->dev = &pdev->dev;
+
+	hcd = usb_create_hcd(&ohci_s5pv210_hc_driver, &pdev->dev,
+						dev_name(&pdev->dev));
 	if (!hcd) {
 		dev_err(&pdev->dev, "usb_create_hcd failed!\n");
-		retval= -ENOMEM;
+		retval = -ENOMEM;
 		goto fail_hcd;
 	}
-	
+
 	s5p_ohci->hcd = hcd;
 	s5p_ohci->clk = clk_get(&pdev->dev, "usbhost");
 
-        if (IS_ERR(s5p_ohci->clk)) {
-                dev_err(&pdev->dev, "Failed to get usbhost clock\n");
-                retval = PTR_ERR(s5p_ohci->clk);
-                goto fail_clk;
-        }
+	if (IS_ERR(s5p_ohci->clk)) {
+		dev_err(&pdev->dev, "Failed to get usbhost clock\n");
+		retval = PTR_ERR(s5p_ohci->clk);
+		goto fail_clk;
+	}
 
-        retval = clk_enable(s5p_ohci->clk);
-        if (retval)
-                goto fail_clken;
-	
+	retval = clk_enable(s5p_ohci->clk);
+	if (retval)
+		goto fail_clken;
+
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-        if (!res) {
-                dev_err(&pdev->dev, "Failed to get I/O memory\n");
-                retval = -ENXIO;
-                goto fail_io;
-        }
+	if (!res) {
+		dev_err(&pdev->dev, "Failed to get I/O memory\n");
+		retval = -ENXIO;
+		goto fail_io;
+	}
 
 	hcd->rsrc_start = res->start;
 	hcd->rsrc_len = resource_size(res);
@@ -244,15 +242,14 @@ static int __devinit ohci_hcd_s5pv210_drv_probe(struct platform_device *pdev)
 	}
 
 	irq = platform_get_irq(pdev, 0);
-        if (!irq) {
-                dev_err(&pdev->dev, "Failed to get IRQ\n");
-                retval = -ENODEV;
-                goto fail;
-        }
-  	
+	if (!irq) {
+		dev_err(&pdev->dev, "Failed to get IRQ\n");
+		retval = -ENODEV;
+		goto fail;
+	}
+
 	if (pdata->phy_init)
 		pdata->phy_init(pdev, S5P_USB_PHY_HOST);
-
 
 	ohci_hcd_init(hcd_to_ohci(hcd));
 
@@ -261,21 +258,20 @@ static int __devinit ohci_hcd_s5pv210_drv_probe(struct platform_device *pdev)
 
 	if (retval) {
 		dev_err(&pdev->dev, "Failed to add USB HCD\n");
-                goto fail;
+		goto fail;
 	}
 
 	platform_set_drvdata(pdev, s5p_ohci);
-	
 	return 0;
 fail:
 	iounmap(hcd->regs);
-	
+
 fail_io:
 	clk_disable(s5p_ohci->clk);
 fail_clken:
-        clk_put(s5p_ohci->clk);
+	clk_put(s5p_ohci->clk);
 fail_clk:
-        usb_put_hcd(hcd);
+	usb_put_hcd(hcd);
 fail_hcd:
 	kfree(s5p_ohci);
 
@@ -287,18 +283,16 @@ static int __devexit ohci_hcd_s5pv210_drv_remove(struct platform_device *pdev)
 	struct s5p_ohci_platdata *pdata = pdev->dev.platform_data;
 	struct s5p_ohci_hcd *s5p_ohci = platform_get_drvdata(pdev);
 	struct usb_hcd *hcd = s5p_ohci->hcd;
-	
+
 	iounmap(hcd->regs);
 	usb_remove_hcd(hcd);
-	
-	if(pdata && pdata->phy_exit)
+
+	if (pdata && pdata->phy_exit)
 		pdata->phy_exit(pdev, S5P_USB_PHY_HOST);
 
-	
-	
 	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
 	clk_disable(s5p_ohci->clk);
-        clk_put(s5p_ohci->clk);
+	clk_put(s5p_ohci->clk);
 
 	usb_put_hcd(hcd);
 	kfree(s5p_ohci);
@@ -308,26 +302,25 @@ static int __devexit ohci_hcd_s5pv210_drv_remove(struct platform_device *pdev)
 }
 static void ohci_s5pv210_set_clock(int start_clk)
 {
-	void __iomem* insnreg;
-        insnreg = ioremap(INSNREG00,4);
+	void __iomem *insnreg;
+	insnreg = ioremap(INSNREG00, 4);
 
-	if(start_clk) {
-		__raw_writel(APP_START_CLK,insnreg);
-	}
-	else {
-		__raw_writel(~APP_START_CLK,insnreg);
-	}		
+	if (start_clk)
+		__raw_writel(APP_START_CLK, insnreg);
+	else
+		__raw_writel(~APP_START_CLK, insnreg);
 }
 static void ohci_hcd_s5pv210_shutdown(struct platform_device *pdev)
 {
-        struct s5p_ohci_hcd *s5p_ohci = platform_get_drvdata(pdev);
-        struct usb_hcd *hcd = s5p_ohci->hcd;
+	struct s5p_ohci_hcd *s5p_ohci = platform_get_drvdata(pdev);
+	struct usb_hcd *hcd = s5p_ohci->hcd;
+
 	ohci_s5pv210_set_clock(1);
-        if (hcd->driver->shutdown)
-                hcd->driver->shutdown(hcd);
+	if (hcd->driver->shutdown)
+		hcd->driver->shutdown(hcd);
 	ohci_s5pv210_set_clock(0);
 }
-static struct platform_driver  ohci_hcd_s5pv210_driver = {
+static struct platform_driver ohci_hcd_s5pv210_driver = {
 	.probe		= ohci_hcd_s5pv210_drv_probe,
 	.remove		= __devexit_p(ohci_hcd_s5pv210_drv_remove),
 	.shutdown	= ohci_hcd_s5pv210_shutdown,
