@@ -25,6 +25,7 @@
 
 #include <drm/drmP.h>
 #include <drm/exynos_drm.h>
+#include <linux/module.h>
 
 #include "exynos_drm_drv.h"
 #include "exynos_drm_gem.h"

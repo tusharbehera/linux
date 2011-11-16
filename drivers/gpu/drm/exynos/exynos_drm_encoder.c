@@ -28,6 +28,7 @@
 
 #include <drm/drmP.h>
 #include <drm/drm_crtc_helper.h>
+#include <linux/module.h>
 
 #include "exynos_drm_drv.h"
 #include "exynos_drm_encoder.h"
