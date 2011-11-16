@@ -24,6 +24,7 @@
  */
 
 #include <drm/drmP.h>
+#include <linux/module.h>
 
 #include <linux/shmem_fs.h>
 #include <drm/exynos_drm.h>
