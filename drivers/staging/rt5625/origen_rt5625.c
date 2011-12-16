@@ -145,7 +145,7 @@ static int origen_hw_params(struct snd_pcm_substream *substream,
 		return ret;
 
 	/* We use PCLK for basic ops in SoC-Slave mode */
-	ret = snd_soc_dai_set_sysclk(cpu_dai, SAMSUNG_I2S_RCLKSRC_1,
+	ret = snd_soc_dai_set_sysclk(cpu_dai, SAMSUNG_I2S_RCLKSRC_0,
 					0, SND_SOC_CLOCK_IN);
 	if (ret < 0)
 		return ret;
