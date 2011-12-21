@@ -807,6 +807,7 @@ static struct platform_device *origen_devices[] __initdata = {
 	&origen_lcd_hv070wsa,
 	&origen_leds_gpio,
 	&origen_device_bluetooth,
+	&exynos4_device_tmu,
 };
 
 /* LCD Backlight data */
