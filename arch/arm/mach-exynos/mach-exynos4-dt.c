@@ -19,7 +19,8 @@
 
 #include <plat/cpu.h>
 #include <plat/regs-serial.h>
-#include <plat/exynos4.h>
+
+#include "common.h"
 
 /*
  * The following lookup table is used to override device names when devices
@@ -60,7 +61,7 @@ static const struct of_dev_auxdata exynos4210_auxdata_lookup[] __initconst = {
 
 static void __init exynos4210_dt_map_io(void)
 {
-	s5p_init_io(NULL, 0, S5P_VA_CHIPID);
+	exynos_init_io(NULL, 0);
 	s3c24xx_init_clocks(24000000);
 }
 
