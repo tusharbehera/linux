@@ -23,8 +23,18 @@
 #include <plat/cpu.h>
 #include <plat/regs-serial.h>
 #include <plat/mfc.h>
+#include <linux/platform_data/usb-exynos.h>
+
+#include <plat/regs-srom.h>
+#include <plat/devs.h>
+#include <plat/usb-phy.h>
 
 #include "common.h"
+
+static struct exynos4_ohci_platdata smdk5250_ohci_pdata = {
+	.phy_init = s5p_usb_phy_init,
+	.phy_exit = s5p_usb_phy_exit,
+};
 
 /*
  * The following lookup table is used to override device names when devices
@@ -104,6 +114,8 @@ static const struct of_dev_auxdata exynos5250_auxdata_lookup[] __initconst = {
 	OF_DEV_AUXDATA("samsung,mfc-v6", 0x11000000, "s5p-mfc-v6", NULL),
 	OF_DEV_AUXDATA("samsung,exynos5250-tmu", 0x10060000,
 				"exynos-tmu", NULL),
+	OF_DEV_AUXDATA("samsung,exynos-ohci", 0x12120000,
+				"exynos-ohci", &smdk5250_ohci_pdata),
 	{},
 };
 
