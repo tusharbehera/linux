@@ -307,6 +307,11 @@
 		gpios = <&gpd1 2 2 3 0>,
 			<&gpd1 3 2 3 0>;
 		status = "okay";
+
+		codec: alc5625@1e {
+			compatible = "realtek,alc5625";
+			reg = <0x1e>;
+		};
 	};
 
 	i2c@138e0000 {
