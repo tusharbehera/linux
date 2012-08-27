@@ -298,6 +298,17 @@
 		};
 	};
 
+	i2c@13870000 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		samsung,i2c-sda-delay = <100>;
+		samsung,i2c-max-bus-freq = <20000>;
+
+		gpios = <&gpd1 2 2 3 0>,
+			<&gpd1 3 2 3 0>;
+		status = "okay";
+	};
+
 	i2c@138e0000 {
 		#address-cells = <1>;
 		#size-cells = <0>;
