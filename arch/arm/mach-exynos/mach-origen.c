@@ -610,7 +610,6 @@ static struct i2c_board_info s5k4ecgx_board_info = {
 	I2C_BOARD_INFO("S5K4ECGX", 0x5A >> 1),
 	.platform_data = &s5k4ecgx_plat,
 };
-#endif
 
 static struct s5p_fimc_isp_info s5k4ecgx_camera_sensors[] = {
 	{
@@ -627,6 +626,7 @@ static struct s5p_platform_fimc fimc_md_platdata = {
 	.isp_info	= s5k4ecgx_camera_sensors,
 	.num_clients	= ARRAY_SIZE(s5k4ecgx_camera_sensors),
 };
+#endif
 
 /* USB EHCI */
 static struct s5p_ehci_platdata origen_ehci_pdata;
@@ -940,6 +940,7 @@ struct gpio cam_gpio[] = {
 	{ORIGEN_GPIO_CAM_1V8, GPIOF_DIR_OUT, "1v8"},
 };
 
+#ifdef CONFIG_VIDEO_S5K4ECGX
 static void __init origen_camera_init(void)
 {
 	int ret;
@@ -981,6 +982,7 @@ static int origen_camera_power(int enable)
 	}
 	return 0;
 }
+#endif
 
 static void __init origen_reserve(void)
 {
@@ -1029,9 +1031,11 @@ static void __init origen_machine_init(void)
 
 	ath6kl_set_platform_data(&origen_wlan_data);
 
+#ifdef CONFIG_VIDEO_S5K4ECGX
 	s3c_set_platdata(&fimc_md_platdata, sizeof(fimc_md_platdata),
 							&s5p_device_fimc_md);
 	origen_camera_init();
+#endif
 }
 
 MACHINE_START(ORIGEN, "ORIGEN")
