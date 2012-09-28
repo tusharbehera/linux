@@ -319,6 +319,40 @@
 		status = "disabled";
 	};
 
+	i2c@138e0000 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "samsung,s3c2440-hdmiphy-i2c";
+		samsung,i2c-quirk-hdmiphy;
+		samsung,i2c-no-gpio;
+		reg = <0x138e0000 0x1000>;
+		interrupts = <0 93 0>;
+
+		hdmiphy: phy@38 {
+			compatible = "samsung,hdmiphy-exynos4210";
+			reg = <0x38>;
+		};
+	};
+
+	tvmixer: tvmixer@12c10000 {
+		compatible = "samsung,s5pv210-tvmixer";
+		reg = <0x12c10000 0x10000>, <0x12c00000 0x10000>;
+		reg-names = "mxr", "vp";
+		interrupts = <0 91 0>;
+		interrupt-names = "irq";
+	};
+
+	hdmi: hdmi@12d00000 {
+		compatible = "samsung,s5pv210-hdmi";
+		reg = <0x12d00000 0x100000>;
+		interrupts = <0 92 0>;
+		phy = <&hdmiphy>;
+
+		vdd_osc-supply = <&ldo8_reg>;
+		vdd_pll-supply = <&ldo3_reg>;
+		vdd-supply = <&ldo3_reg>;
+	};
+
 	spi_0: spi@13920000 {
 		status = "disabled";
 	};
