@@ -1019,25 +1019,25 @@ static int max8997_pmic_dt_parse_pdata(struct max8997_dev *iodev,
 		ret = max8997_pmic_dt_parse_dvs_gpio(iodev, pdata, pmic_np);
 		if (ret)
 			return -EINVAL;
-
-		if (of_property_read_u32(pmic_np,
-				"max8997,pmic-buck125-default-dvs-idx",
-				&pdata->buck125_default_idx)) {
-			pdata->buck125_default_idx = 0;
-		} else {
-			if (pdata->buck125_default_idx >= 8) {
-				pdata->buck125_default_idx = 0;
-				dev_info(iodev->dev, "invalid value for "
-				"default dvs index, using 0 instead\n");
-			}
-		}
-
-		if (of_get_property(pmic_np,
-			"max8997,pmic-ignore-gpiodvs-side-effect", NULL))
-			pdata->ignore_gpiodvs_side_effect = true;
-
-		dvs_voltage_nr = 8;
 	}
+
+	if (of_property_read_u32(pmic_np,
+			"max8997,pmic-buck125-default-dvs-idx",
+			&pdata->buck125_default_idx)) {
+		pdata->buck125_default_idx = 0;
+	} else {
+		if (pdata->buck125_default_idx >= 8) {
+			pdata->buck125_default_idx = 0;
+			dev_info(iodev->dev, "invalid value for "
+			"default dvs index, using 0 instead\n");
+		}
+	}
+
+	if (of_get_property(pmic_np,
+		"max8997,pmic-ignore-gpiodvs-side-effect", NULL))
+		pdata->ignore_gpiodvs_side_effect = true;
+
+	dvs_voltage_nr = 8;
 
 	if (of_property_read_u32_array(pmic_np,
 				"max8997,pmic-buck1-dvs-voltage",
