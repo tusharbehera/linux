@@ -186,9 +186,6 @@
 			reg = <0x66>;
 			interrupts = <4 0>, <3 0>;
 
-			max8997,pmic-buck1-uses-gpio-dvs;
-			max8997,pmic-buck2-uses-gpio-dvs;
-			max8997,pmic-buck5-uses-gpio-dvs;
 			max8997,pmic-ignore-gpiodvs-side-effect;
 			max8997,pmic-buck125-default-dvs-idx = <0>;
 			max8997,pmic-buck125-dvs-gpios = <&gpx0 0 1 0 0>, /* SET1 */
