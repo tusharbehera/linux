@@ -410,7 +410,4 @@
 		compatible = "samsung,audio-dma";
 	};
 
-	origen_audio {
-		compatible = "samsung,origen_audio";
-	};
 };
