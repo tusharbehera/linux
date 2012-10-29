@@ -3979,12 +3979,16 @@ struct sd_lb_stats {
 	struct sched_group *busiest; /* Busiest group in this sd */
 	struct sched_group *this;  /* Local group in this sd */
 	unsigned long total_load;  /* Total load of all groups in sd */
+	u64 total_sgs_load;	 /* Equivalent to total_load except using PJT's metrics */
 	unsigned long total_pwr;   /*	Total power of all groups in sd */
 	unsigned long avg_load;	   /* Average load across all groups in sd */
+	u64 avg_sgs_load;	  /* Equivalent to avg_load but calculated with PJT's metrics */
 
 	/** Statistics of this group */
 	unsigned long this_load;
+	u64 this_sg_load;	/* Equivalent to this_load but calculated using PJT's metric*/
 	unsigned long this_load_per_task;
+	u64 this_sg_load_per_task; /* Equivalent to this_load_per_task but using PJT's metric*/
 	unsigned long this_nr_running;
 	unsigned long this_has_capacity;
 	unsigned int  this_idle_cpus;
@@ -3992,8 +3996,9 @@ struct sd_lb_stats {
 	/* Statistics of the busiest group */
 	unsigned int  busiest_idle_cpus;
 	unsigned long max_load;
-	u64 max_sg_load; /* Equivalent of max_load but calculated using pjt's metric*/
+	u64 max_sg_load; /* Equivalent of max_load but calculated using PJT's metric*/
 	unsigned long busiest_load_per_task;
+	u64 busiest_sg_load_per_task; /*Equivalent of busiest_load_per_task but using PJT's metric*/
 	unsigned long busiest_nr_running;
 	unsigned long busiest_group_capacity;
 	unsigned long busiest_has_capacity;
@@ -4009,6 +4014,7 @@ struct sg_lb_stats {
 	unsigned long avg_load; /*Avg load across the CPUs of the group */
 	u64 avg_cfs_runnable_load; /* Equivalent of avg_load but calculated using PJT's metric */
 	unsigned long group_load; /* Total load over the CPUs of the group */
+	u64 group_cfs_runnable_load; /* Equivalent of group_load but calculated using PJT's metric */
 	unsigned long sum_nr_running; /* Nr tasks running in the group */
 	unsigned long sum_weighted_load; /* Weighted load of group's tasks */
 	unsigned long group_capacity;
@@ -4216,7 +4222,6 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 	unsigned long load, max_cpu_load, min_cpu_load;
 	unsigned int balance_cpu = -1, first_idle_cpu = 0;
 	unsigned long avg_load_per_task = 0;
-	u64 group_load = 0; /* computed using PJT's metric */
 	int i;
 
 	if (local_group)
@@ -4260,7 +4265,8 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 		sgs->sum_weighted_load += weighted_cpuload(i);
 		if (idle_cpu(i))
 			sgs->idle_cpus++;
-		group_load += cpu_rq(i)->cfs.runnable_load_avg;
+		/* Tracking load using PJT's metric */
+		sgs->group_cfs_runnable_load += cpu_rq(i)->cfs.runnable_load_avg;
 	}
 
 	/*
@@ -4292,8 +4298,8 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 	 *
 	 * The below condition is included as a tunable to meet performance and power needs
 	 */
-	sgs->avg_cfs_runnable_load = (group_load * SCHED_POWER_SCALE) / group->sgp->power;
-	if (sgs->avg_cfs_runnable_load <= 1178 && sgs->sum_nr_running <= 2)
+	sgs->avg_cfs_runnable_load = (sgs->group_cfs_runnable_load * SCHED_POWER_SCALE) / group->sgp->power;
+	if (sgs->avg_cfs_runnable_load <= 1178 && sgs->sum_nr_running <= 2 && !local_group)
 		sgs->avg_cfs_runnable_load = 0;
 
 	/*
@@ -4409,6 +4415,8 @@ static inline void update_sd_lb_stats(struct lb_env *env,
 			return;
 
 		sds->total_load += sgs.group_load;
+		/* Tracking load using PJT's metrics */
+		sds->total_sgs_load += sgs.group_cfs_runnable_load;
 		sds->total_pwr += sg->sgp->power;
 
 		/*
@@ -4426,9 +4434,11 @@ static inline void update_sd_lb_stats(struct lb_env *env,
 
 		if (local_group) {
 			sds->this_load = sgs.avg_load;
+			sds->this_sg_load = sgs.avg_cfs_runnable_load;
 			sds->this = sg;
 			sds->this_nr_running = sgs.sum_nr_running;
 			sds->this_load_per_task = sgs.sum_weighted_load;
+			sds->this_sg_load_per_task = sgs.group_cfs_runnable_load;
 			sds->this_has_capacity = sgs.group_has_capacity;
 			sds->this_idle_cpus = sgs.idle_cpus;
 		} else if (update_sd_pick_busiest(env, sds, sg, &sgs)) {
@@ -4439,6 +4449,7 @@ static inline void update_sd_lb_stats(struct lb_env *env,
 			sds->busiest_idle_cpus = sgs.idle_cpus;
 			sds->busiest_group_capacity = sgs.group_capacity;
 			sds->busiest_load_per_task = sgs.sum_weighted_load;
+			sds->busiest_sg_load_per_task = sgs.group_cfs_runnable_load;
 			sds->busiest_has_capacity = sgs.group_has_capacity;
 			sds->busiest_group_weight = sgs.group_weight;
 			sds->group_imb = sgs.group_imb;
@@ -4677,6 +4688,8 @@ find_busiest_group(struct lb_env *env, int *balance)
 		goto out_balanced;
 
 	sds.avg_load = (SCHED_POWER_SCALE * sds.total_load) / sds.total_pwr;
+	sds.avg_sgs_load = SCHED_POWER_SCALE * sds.total_sgs_load;
+	do_div(sds.avg_sgs_load, sds.total_pwr);
 
 	/*
 	 * If the busiest group is imbalanced the below checks don't
@@ -4695,14 +4708,16 @@ find_busiest_group(struct lb_env *env, int *balance)
 	 * If the local group is more busy than the selected busiest group
 	 * don't try and pull any tasks.
 	 */
-	if (sds.this_load >= sds.max_load)
+	/* The following metrics has been changed to test PJT's metric */
+	if (sds.this_sg_load >= sds.max_sg_load)
 		goto out_balanced;
 
 	/*
 	 * Don't pull any tasks if this group is already above the domain
 	 * average load.
 	 */
-	if (sds.this_load >= sds.avg_load)
+	/* The following metrics has been changed to test PJT's metric */
+	if (sds.this_sg_load >= sds.avg_sgs_load)
 		goto out_balanced;
 
 	if (env->idle == CPU_IDLE) {
@@ -4720,7 +4735,10 @@ find_busiest_group(struct lb_env *env, int *balance)
 		 * In the CPU_NEWLY_IDLE, CPU_NOT_IDLE cases, use
 		 * imbalance_pct to be conservative.
 		 */
-		if (100 * sds.max_load <= env->sd->imbalance_pct * sds.this_load)
+		/* The following metrics has been changed to test PJT's
+		 * metric
+		 */
+		if (100 * sds.max_sg_load <= env->sd->imbalance_pct * sds.this_sg_load)
 			goto out_balanced;
 	}
 
