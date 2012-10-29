@@ -3035,16 +3035,18 @@ find_idlest_group(struct sched_domain *sd, struct task_struct *p,
 static int
 find_idlest_cpu(struct sched_group *group, struct task_struct *p, int this_cpu)
 {
-	unsigned long load, min_load = ULONG_MAX;
+	unsigned long load;
+	u64 cpu_load, min_cpu_load = ~0ULL;
 	int idlest = -1;
 	int i;
 
 	/* Traverse only the allowed CPUs */
 	for_each_cpu_and(i, sched_group_cpus(group), tsk_cpus_allowed(p)) {
 		load = weighted_cpuload(i);
+		cpu_load = cpu_rq(i)->cfs.runnable_load_avg;
 
-		if (load < min_load || (load == min_load && i == this_cpu)) {
-			min_load = load;
+		if (cpu_load < min_cpu_load || (cpu_load == min_cpu_load && i == this_cpu)) {
+			min_cpu_load = cpu_load;
 			idlest = i;
 		}
 	}
