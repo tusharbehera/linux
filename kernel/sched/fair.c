@@ -4597,12 +4597,14 @@ void fix_small_imbalance(struct lb_env *env, struct sd_lb_stats *sds)
  */
 static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *sds)
 {
-	unsigned long max_pull, load_above_capacity = ~0UL;
+	/* Additional parameters introduced to use PJT's metric */
+	u64 max_load_pull, load_above_busiest_capacity = ~0ULL;
 
-	sds->busiest_load_per_task /= sds->busiest_nr_running;
+	/* Calculation using PJT's metric */
+	sds->busiest_sg_load_per_task /= sds->busiest_nr_running;
 	if (sds->group_imb) {
-		sds->busiest_load_per_task =
-			min(sds->busiest_load_per_task, sds->avg_load);
+		sds->busiest_sg_load_per_task =
+			min(sds->busiest_sg_load_per_task, sds->avg_sgs_load);
 	}
 
 	/*
@@ -4610,21 +4612,24 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
 	 * max load less than avg load(as we skip the groups at or below
 	 * its cpu_power, while calculating max_load..)
 	 */
-	if (sds->max_load < sds->avg_load) {
+	if (sds->max_sg_load < sds->avg_sgs_load) {
 		env->imbalance = 0;
+		env->load_imbalance = 0;
 		return fix_small_imbalance(env, sds);
 	}
 
 	if (!sds->group_imb) {
 		/*
 		 * Don't want to pull so many tasks that a group would go idle.
+		 * Also the below change due to the integration with PJT's
+		 * metric
 		 */
-		load_above_capacity = (sds->busiest_nr_running -
+		load_above_busiest_capacity = (sds->busiest_nr_running -
 						sds->busiest_group_capacity);
 
-		load_above_capacity *= (SCHED_LOAD_SCALE * SCHED_POWER_SCALE);
+		load_above_busiest_capacity *= (SCHED_LOAD_SCALE * SCHED_POWER_SCALE);
 
-		load_above_capacity /= sds->busiest->sgp->power;
+		load_above_busiest_capacity /= sds->busiest->sgp->power;
 	}
 
 	/*
@@ -4637,11 +4642,16 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
 	 * Be careful of negative numbers as they'll appear as very large values
 	 * with unsigned longs.
 	 */
-	max_pull = min(sds->max_load - sds->avg_load, load_above_capacity);
+	/*
+	 * The below maximum load to be pulled is based on the PJT's metric
+ 	 */
+	max_load_pull = min(sds->max_sg_load - sds->avg_sgs_load, load_above_busiest_capacity);
 
-	/* How much load to actually move to equalise the imbalance */
-	env->imbalance = min(max_pull * sds->busiest->sgp->power,
-		(sds->avg_load - sds->this_load) * sds->this->sgp->power)
+	/* How much load to actually move to equalise the imbalance
+ 	 * Calculated using PJT's metric
+	 */
+	env->load_imbalance = min(max_load_pull * sds->busiest->sgp->power,
+		(sds->avg_sgs_load - sds->this_sg_load) * sds->this->sgp->power)
 			/ SCHED_POWER_SCALE;
 
 	/*
@@ -4650,7 +4660,7 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
 	 * a think about bumping its value to force at least one task to be
 	 * moved
 	 */
-	if (env->imbalance < sds->busiest_load_per_task)
+	if (env->load_imbalance < sds->busiest_sg_load_per_task)
 		return fix_small_imbalance(env, sds);
 
 }
