@@ -4005,6 +4005,7 @@ struct sd_lb_stats {
  */
 struct sg_lb_stats {
 	unsigned long avg_load; /*Avg load across the CPUs of the group */
+	u64 avg_cfs_runnable_load; /* Equivalent of avg_load but calculated using PJT's metric */
 	unsigned long group_load; /* Total load over the CPUs of the group */
 	unsigned long sum_nr_running; /* Nr tasks running in the group */
 	unsigned long sum_weighted_load; /* Weighted load of group's tasks */
@@ -4213,6 +4214,7 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 	unsigned long load, max_cpu_load, min_cpu_load;
 	unsigned int balance_cpu = -1, first_idle_cpu = 0;
 	unsigned long avg_load_per_task = 0;
+	u64 group_load = 0; /* computed using PJT's metric */
 	int i;
 
 	if (local_group)
@@ -4256,6 +4258,7 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 		sgs->sum_weighted_load += weighted_cpuload(i);
 		if (idle_cpu(i))
 			sgs->idle_cpus++;
+		group_load += cpu_rq(i)->cfs.runnable_load_avg;
 	}
 
 	/*
@@ -4277,6 +4280,19 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 
 	/* Adjust by relative CPU power of the group */
 	sgs->avg_load = (sgs->group_load*SCHED_POWER_SCALE) / group->sgp->power;
+
+	/*
+	 * Check if the sched group has not crossed the threshold.
+	 *
+	 * Also check if the sched_group although being within the threshold,is not
+	 * queueing too many tasks.If yes to both,then make it an
+	 * invalid candidate for load balancing
+	 *
+	 * The below condition is included as a tunable to meet performance and power needs
+	 */
+	sgs->avg_cfs_runnable_load = (group_load * SCHED_POWER_SCALE) / group->sgp->power;
+	if (sgs->avg_cfs_runnable_load <= 1178 && sgs->sum_nr_running <= 2)
+		sgs->avg_cfs_runnable_load = 0;
 
 	/*
 	 * Consider the group unbalanced when the imbalance is larger
