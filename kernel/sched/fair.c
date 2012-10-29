@@ -3782,7 +3782,7 @@ static int move_tasks(struct lb_env *env)
 	unsigned long load;
 	int pulled = 0;
 
-	if (env->imbalance <= 0)
+	if (env->load_imbalance <= 0)
 		return 0;
 
 	while (!list_empty(tasks)) {
@@ -3808,7 +3808,8 @@ static int move_tasks(struct lb_env *env)
 		if (sched_feat(LB_MIN) && load < 16 && !env->sd->nr_balance_failed)
 			goto next;
 
-		if ((load / 2) > env->imbalance)
+		/* The below being changed to use the PJT's metric */
+		if ((load / 2) > env->load_imbalance)
 			goto next;
 
 		if (!can_migrate_task(p, env))
@@ -3816,7 +3817,8 @@ static int move_tasks(struct lb_env *env)
 
 		move_task(p, env);
 		pulled++;
-		env->imbalance -= load;
+		/* Using PJT's metric */
+		env->load_imbalance -= load;
 
 #ifdef CONFIG_PREEMPT
 		/*
@@ -3831,8 +3833,9 @@ static int move_tasks(struct lb_env *env)
 		/*
 		 * We only want to steal up to the prescribed amount of
 		 * weighted load.
+		 * But the below modification is to use PJT's metric
 		 */
-		if (env->imbalance <= 0)
+		if (env->load_imbalance <= 0)
 			break;
 
 		continue;
@@ -3967,7 +3970,8 @@ static inline void update_h_load(long cpu)
 
 static unsigned long task_h_load(struct task_struct *p)
 {
-	return p->se.load.weight;
+	/* The below is changed to use PJT's metric*/
+	return p->se.avg.load_avg_contrib;
 }
 #endif
 
