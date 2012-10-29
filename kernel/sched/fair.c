@@ -162,7 +162,8 @@ void sched_init_granularity(void)
 #else
 # define WMULT_CONST	(1UL << 32)
 #endif
-
+#define NR_THRESHOLD 2
+#define LOAD_THRESHOLD 1
 #define WMULT_SHIFT	32
 
 /*
@@ -3991,6 +3992,7 @@ struct sd_lb_stats {
 	/* Statistics of the busiest group */
 	unsigned int  busiest_idle_cpus;
 	unsigned long max_load;
+	u64 max_sg_load; /* Equivalent of max_load but calculated using pjt's metric*/
 	unsigned long busiest_load_per_task;
 	unsigned long busiest_nr_running;
 	unsigned long busiest_group_capacity;
@@ -4335,8 +4337,24 @@ static bool update_sd_pick_busiest(struct lb_env *env,
 				   struct sched_group *sg,
 				   struct sg_lb_stats *sgs)
 {
-	if (sgs->avg_load <= sds->max_load)
-		return false;
+	/* Use PJT's metrics to qualify a sched_group as busy
+ 	 *
+ 	 * But a low load sched group may be queueing up many tasks
+ 	 * So before dismissing a sched group with lesser load,ensure
+ 	 * that the number of processes on it is checked if it is
+ 	 * not too less loaded than the max load so far
+ 	 *
+ 	 * But as of now as LOAD_THRESHOLD is 1,this check is a nop.
+ 	 * But we could vary LOAD_THRESHOLD suitably to bring in this check
+ 	 */
+	if (sgs->avg_cfs_runnable_load <= sds->max_sg_load) {
+		if (sgs->avg_cfs_runnable_load > LOAD_THRESHOLD * sds->max_sg_load) {
+			if (sgs->sum_nr_running <= (NR_THRESHOLD + sds->busiest_nr_running))
+				return false;
+		} else {
+			return false;
+		}
+	}
 
 	if (sgs->sum_nr_running > sgs->group_capacity)
 		return true;
@@ -4415,6 +4433,7 @@ static inline void update_sd_lb_stats(struct lb_env *env,
 			sds->this_idle_cpus = sgs.idle_cpus;
 		} else if (update_sd_pick_busiest(env, sds, sg, &sgs)) {
 			sds->max_load = sgs.avg_load;
+			sds->max_sg_load = sgs.avg_cfs_runnable_load;
 			sds->busiest = sg;
 			sds->busiest_nr_running = sgs.sum_nr_running;
 			sds->busiest_idle_cpus = sgs.idle_cpus;
