@@ -2977,11 +2977,13 @@ find_idlest_group(struct sched_domain *sd, struct task_struct *p,
 		  int this_cpu, int load_idx)
 {
 	struct sched_group *idlest = NULL, *group = sd->groups;
-	unsigned long min_load = ULONG_MAX, this_load = 0;
+	unsigned long this_load = 0;
+	u64 min_sg_load = ~0ULL, this_sg_load = 0;/* Helpers for PJT's metrics */
 	int imbalance = 100 + (sd->imbalance_pct-100)/2;
 
 	do {
 		unsigned long load, avg_load;
+		u64 avg_sg_load;/* Helpers for PJT's metrics */
 		int local_group;
 		int i;
 
@@ -2995,6 +2997,7 @@ find_idlest_group(struct sched_domain *sd, struct task_struct *p,
 
 		/* Tally up the load of all CPUs in the group */
 		avg_load = 0;
+		avg_sg_load = 0;
 
 		for_each_cpu(i, sched_group_cpus(group)) {
 			/* Bias balancing toward cpus of our domain */
@@ -3004,20 +3007,24 @@ find_idlest_group(struct sched_domain *sd, struct task_struct *p,
 				load = target_load(i, load_idx);
 
 			avg_load += load;
+			avg_sg_load += cpu_rq(i)->cfs.runnable_load_avg;
 		}
 
 		/* Adjust by relative CPU power of the group */
 		avg_load = (avg_load * SCHED_POWER_SCALE) / group->sgp->power;
+		avg_sg_load *= SCHED_POWER_SCALE;
+		do_div(avg_sg_load, group->sgp->power);
 
 		if (local_group) {
 			this_load = avg_load;
-		} else if (avg_load < min_load) {
-			min_load = avg_load;
+			this_sg_load = avg_sg_load;
+		} else if (avg_sg_load < min_sg_load) {/* Decision changed to suit PJT's metric */
+			min_sg_load = avg_sg_load;
 			idlest = group;
 		}
 	} while (group = group->next, group != sd->groups);
 
-	if (!idlest || 100*this_load < imbalance*min_load)
+	if (!idlest || 100*this_sg_load < imbalance*min_sg_load)
 		return NULL;
 	return idlest;
 }
