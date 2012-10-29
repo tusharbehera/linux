@@ -4977,7 +4977,10 @@ more_balance:
 		 * moreover subsequent load balance cycles should correct the
 		 * excess load moved.
 		 */
-		if ((env.flags & LBF_SOME_PINNED) && env.imbalance > 0 &&
+		/*
+		 * The following decision based on PJT's metric
+ 		 */
+		if ((env.flags & LBF_SOME_PINNED) && env.load_imbalance > 0 &&
 				lb_iterations++ < max_lb_iterations) {
 
 			env.dst_rq	 = cpu_rq(env.new_dst_cpu);
