@@ -4519,6 +4519,8 @@ static int check_asym_packing(struct lb_env *env, struct sd_lb_stats *sds)
 
 	env->imbalance = DIV_ROUND_CLOSEST(
 		sds->max_load * sds->busiest->sgp->power, SCHED_POWER_SCALE);
+	env->load_imbalance = DIV_ROUND_CLOSEST(
+		sds->max_sg_load * sds->busiest->sgp->power, SCHED_POWER_SCALE);
 
 	return 1;
 }
