@@ -3608,6 +3608,7 @@ struct lb_env {
 	int			new_dst_cpu;
 	enum cpu_idle_type	idle;
 	long			imbalance;
+	long long               load_imbalance; /* PJT metric equivalent of imbalance */
 	/* The set of CPUs under consideration for load-balancing */
 	struct cpumask		*cpus;
 
@@ -4222,6 +4223,11 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 	unsigned long load, max_cpu_load, min_cpu_load;
 	unsigned int balance_cpu = -1, first_idle_cpu = 0;
 	unsigned long avg_load_per_task = 0;
+
+	/* Decide imb based on PJT's metric */
+	u64 cpu_runnable_load, max_cpu_runnable_load, min_cpu_runnable_load;
+	u64 avg_sg_load_per_task = 0;
+
 	int i;
 
 	if (local_group)
@@ -4230,6 +4236,8 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 	/* Tally up the load of all CPUs in the group */
 	max_cpu_load = 0;
 	min_cpu_load = ~0UL;
+	max_cpu_runnable_load = 0;
+	min_cpu_runnable_load = ~0ULL;
 	max_nr_running = 0;
 	min_nr_running = ~0UL;
 
@@ -4253,6 +4261,12 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 				max_cpu_load = load;
 			if (min_cpu_load > load)
 				min_cpu_load = load;
+
+			cpu_runnable_load = cpu_rq(i)->cfs.runnable_load_avg;
+			if (cpu_runnable_load > max_cpu_runnable_load)
+				max_cpu_runnable_load = cpu_runnable_load;
+			if (min_cpu_runnable_load > cpu_runnable_load)
+				min_cpu_runnable_load = cpu_runnable_load;
 
 			if (nr_running > max_nr_running)
 				max_nr_running = nr_running;
@@ -4311,10 +4325,13 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 	 *      normalized nr_running number somewhere that negates
 	 *      the hierarchy?
 	 */
-	if (sgs->sum_nr_running)
+	if (sgs->sum_nr_running) {
 		avg_load_per_task = sgs->sum_weighted_load / sgs->sum_nr_running;
+		avg_sg_load_per_task = sgs->group_cfs_runnable_load / sgs->sum_nr_running;
+	}
 
-	if ((max_cpu_load - min_cpu_load) >= avg_load_per_task &&
+	/* The following decision is made on PJT's metric */
+	if ((max_cpu_runnable_load - min_cpu_runnable_load) >= avg_sg_load_per_task &&
 	    (max_nr_running - min_nr_running) > 1)
 		sgs->group_imb = 1;
 
@@ -4750,6 +4767,7 @@ force_balance:
 out_balanced:
 ret:
 	env->imbalance = 0;
+	env->load_imbalance = 0;
 	return NULL;
 }
 
