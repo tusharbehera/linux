@@ -2943,10 +2943,12 @@ static int wake_affine(struct sched_domain *sd, struct task_struct *p, int sync)
 
 	schedstat_inc(p, se.statistics.nr_wakeups_affine_attempts);
 	/* Below modification to use PJT's metric */
-	if (nr_running)
-		tl_per_task = cpu_rq(this_cpu)->cfs.runnable_load_avg / nr_running;
-	else
+	if (nr_running) {
+		tl_per_task = cpu_rq(this_cpu)->cfs.runnable_load_avg;
+		do_div(tl_per_task, nr_running);
+	} else {
 		tl_per_task = 0;
+	}
 
 	if (balanced ||
 	    (this_load <= load &&
@@ -4322,7 +4324,8 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 	 *
 	 * The below condition is included as a tunable to meet performance and power needs
 	 */
-	sgs->avg_cfs_runnable_load = (sgs->group_cfs_runnable_load * SCHED_POWER_SCALE) / group->sgp->power;
+	sgs->avg_cfs_runnable_load = (sgs->group_cfs_runnable_load * SCHED_POWER_SCALE);
+	do_div(sgs->avg_cfs_runnable_load, group->sgp->power);
 	if (sgs->avg_cfs_runnable_load <= 1178 && sgs->sum_nr_running <= 2 && !local_group)
 		sgs->avg_cfs_runnable_load = 0;
 
@@ -4337,7 +4340,8 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 	 */
 	if (sgs->sum_nr_running) {
 		avg_load_per_task = sgs->sum_weighted_load / sgs->sum_nr_running;
-		avg_sg_load_per_task = sgs->group_cfs_runnable_load / sgs->sum_nr_running;
+		avg_sg_load_per_task = sgs->group_cfs_runnable_load;
+		do_div(avg_sg_load_per_task, sgs->sum_nr_running);
 	}
 
 	/* The following decision is made on PJT's metric */
@@ -4549,15 +4553,15 @@ void fix_small_imbalance(struct lb_env *env, struct sd_lb_stats *sds)
 	unsigned long nr_running = ACCESS_ONCE(cpu_rq(env->dst_cpu)->nr_running);
 
 	if (sds->this_nr_running) {
-		sds->this_sg_load_per_task /= sds->this_nr_running;
+		do_div(sds->this_sg_load_per_task, sds->this_nr_running);
 		if (sds->busiest_sg_load_per_task >
 				sds->this_sg_load_per_task)
 			imbn = 1;
 	} else {
 		if (nr_running) {
-			sds->this_sg_load_per_task =
 			/* The below decision based on PJT's metric */
-			cpu_rq(env->dst_cpu)->cfs.runnable_load_avg / nr_running;
+			sds->this_sg_load_per_task = cpu_rq(env->dst_cpu)->cfs.runnable_load_avg;
+			do_div(sds->this_sg_load_per_task, nr_running);
 		} else {
 			sds->this_sg_load_per_task = 0;
 		}
@@ -4568,7 +4572,7 @@ void fix_small_imbalance(struct lb_env *env, struct sd_lb_stats *sds)
 	scaled_busy_sg_load_per_task = sds->busiest_sg_load_per_task
 					 * SCHED_POWER_SCALE;
 	scaled_busy_load_per_task /= sds->busiest->sgp->power;
-	scaled_busy_sg_load_per_task /= sds->busiest->sgp->power;
+	do_div(scaled_busy_sg_load_per_task, sds->busiest->sgp->power);
 
 	if (sds->max_sg_load - sds->this_sg_load + scaled_busy_sg_load_per_task >=
 			(scaled_busy_sg_load_per_task * imbn)) {
@@ -4589,20 +4593,21 @@ void fix_small_imbalance(struct lb_env *env, struct sd_lb_stats *sds)
 	pwr_now /= SCHED_POWER_SCALE;
 
 	/* Amount of load we'd subtract */
-	tmp = (sds->busiest_sg_load_per_task * SCHED_POWER_SCALE) /
-		sds->busiest->sgp->power;
+	tmp = (sds->busiest_sg_load_per_task * SCHED_POWER_SCALE);
+	do_div(tmp, sds->busiest->sgp->power);
 	if (sds->max_sg_load > tmp)
 		pwr_move += sds->busiest->sgp->power *
 			min(sds->busiest_sg_load_per_task, sds->max_sg_load - tmp);
 
 	/* Amount of load we'd add */
 	if (sds->max_sg_load * sds->busiest->sgp->power <
-		sds->busiest_sg_load_per_task * SCHED_POWER_SCALE)
-		tmp = (sds->max_sg_load * sds->busiest->sgp->power) /
-			sds->this->sgp->power;
-	else
-		tmp = (sds->busiest_sg_load_per_task * SCHED_POWER_SCALE) /
-			sds->this->sgp->power;
+		sds->busiest_sg_load_per_task * SCHED_POWER_SCALE) {
+		tmp = (sds->max_sg_load * sds->busiest->sgp->power);
+		do_div(tmp, sds->this->sgp->power);
+	} else {
+		tmp = (sds->busiest_sg_load_per_task * SCHED_POWER_SCALE);
+		do_div(tmp, sds->this->sgp->power);
+	}
 	pwr_move += sds->this->sgp->power *
 			min(sds->this_sg_load_per_task, sds->this_sg_load + tmp);
 	pwr_move /= SCHED_POWER_SCALE;
@@ -4624,7 +4629,7 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
 	u64 max_load_pull, load_above_busiest_capacity = ~0ULL;
 
 	/* Calculation using PJT's metric */
-	sds->busiest_sg_load_per_task /= sds->busiest_nr_running;
+	do_div(sds->busiest_sg_load_per_task, sds->busiest_nr_running);
 	if (sds->group_imb) {
 		sds->busiest_sg_load_per_task =
 			min(sds->busiest_sg_load_per_task, sds->avg_sgs_load);
@@ -4652,7 +4657,7 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
 
 		load_above_busiest_capacity *= (SCHED_LOAD_SCALE * SCHED_POWER_SCALE);
 
-		load_above_busiest_capacity /= sds->busiest->sgp->power;
+		do_div(load_above_busiest_capacity, sds->busiest->sgp->power);
 	}
 
 	/*
@@ -4846,7 +4851,8 @@ static struct rq *find_busiest_queue(struct lb_env *env,
 		 * running at a lower capacity.
 		 */
 		wl = (wl * SCHED_POWER_SCALE) / power;
-		runnable_load = (runnable_load * SCHED_POWER_SCALE) / power;
+		runnable_load = (runnable_load * SCHED_POWER_SCALE);
+		do_div(runnable_load, power);
 
 		/* Below decision has been changed to use PJT's metric */
 		if (runnable_load > max_cpu_load) {
