@@ -20,6 +20,7 @@
 #include <linux/gpio_keys.h>
 #include <linux/i2c.h>
 #include <linux/regulator/machine.h>
+#include <linux/regulator/fixed.h>
 #include <linux/mfd/max8997.h>
 #include <linux/lcd.h>
 #include <linux/rfkill-gpio.h>
@@ -68,6 +69,10 @@
 				 S5PV210_UFCON_TXTRIG4 |	\
 				 S5PV210_UFCON_RXTRIG4)
 
+enum fixed_regulator_id {
+	FIXED_REG_5V = 0,
+};
+
 static struct s3c2410_uartcfg origen_uartcfgs[] __initdata = {
 	[0] = {
 		.hwport		= 0,
@@ -97,6 +102,10 @@ static struct s3c2410_uartcfg origen_uartcfgs[] __initdata = {
 		.ulcon		= ORIGEN_ULCON_DEFAULT,
 		.ufcon		= ORIGEN_UFCON_DEFAULT,
 	},
+};
+
+static struct regulator_consumer_supply fixed_5v_regulators[] = {
+	REGULATOR_SUPPLY("hdmi-en", "exynos4-hdmi"),
 };
 
 static struct regulator_consumer_supply __initdata ldo3_consumer[] = {
@@ -888,6 +897,9 @@ static void __init origen_power_init(void)
 	gpio_request(EXYNOS4_GPX0(4), "PMIC_IRQ");
 	s3c_gpio_cfgpin(EXYNOS4_GPX0(4), S3C_GPIO_SFN(0xf));
 	s3c_gpio_setpull(EXYNOS4_GPX0(4), S3C_GPIO_PULL_NONE);
+
+	regulator_register_always_on(FIXED_REG_5V, "Fixed 5V",
+		fixed_5v_regulators, ARRAY_SIZE(fixed_5v_regulators), 5000000);
 }
 
 static void __init origen_reserve(void)
