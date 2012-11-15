@@ -1175,6 +1175,7 @@ static struct usb_composite_driver android_usb_driver = {
 	.name		= "android_usb",
 	.dev		= &device_desc,
 	.strings	= dev_strings,
+	.bind		= android_bind,
 	.unbind		= android_usb_unbind,
 	.max_speed	= USB_SPEED_HIGH,
 };
@@ -1291,10 +1292,10 @@ static int __init init(void)
 	_android_dev = dev;
 
 	/* Override composite driver functions */
-	composite_driver.setup = android_setup;
-	composite_driver.disconnect = android_disconnect;
+	composite_driver_template.setup = android_setup;
+	composite_driver_template.disconnect = android_disconnect;
 
-	return usb_composite_probe(&android_usb_driver, android_bind);
+	return usb_composite_probe(&android_usb_driver);
 }
 module_init(init);
 
