@@ -17,6 +17,7 @@
 
 #include <asm/mach/arch.h>
 #include <asm/hardware/gic.h>
+#include <asm/io.h>
 
 #include <mach/map.h>
 #include <mach/regs-pmu.h>
