@@ -836,7 +836,6 @@ static unsigned hub_power_on(struct usb_hub *hub, bool do_delay)
 	unsigned delay;
 	u16 wHubCharacteristics =
 			le16_to_cpu(hub->descriptor->wHubCharacteristics);
-
 	/* Enable power on each port.  Some hubs have reserved values
 	 * of LPSM (> 2) in their descriptors, even though they are
 	 * USB 2.0 hubs.  Some hubs do not implement port-power switching
@@ -960,7 +959,6 @@ static void hub_activate(struct usb_hub *hub, enum hub_activation_type type)
 	int status;
 	bool need_debounce_delay = false;
 	unsigned delay;
-
 	/* Continue a partial initialization */
 	if (type == HUB_INIT2)
 		goto init2;
@@ -1041,7 +1039,6 @@ static void hub_activate(struct usb_hub *hub, enum hub_activation_type type)
 	for (port1 = 1; port1 <= hdev->maxchild; ++port1) {
 		struct usb_device *udev = hub->ports[port1 - 1]->child;
 		u16 portstatus, portchange;
-
 		portstatus = portchange = 0;
 		status = hub_port_status(hub, port1, &portstatus, &portchange);
 		if (udev || (portstatus & USB_PORT_STAT_CONNECTION))
@@ -1327,7 +1324,7 @@ static int hub_configure(struct usb_hub *hub,
 	}
 
 	hdev->maxchild = hub->descriptor->bNbrPorts;
-	dev_info (hub_dev, "%d port%s detected\n", hdev->maxchild,
+	dev_dbg (hub_dev, "%d port%s detected\n", hdev->maxchild,
 		(hdev->maxchild == 1) ? "" : "s");
 
 	hub->ports = kzalloc(hdev->maxchild * sizeof(struct usb_port *),
@@ -1338,7 +1335,6 @@ static int hub_configure(struct usb_hub *hub,
 	}
 
 	wHubCharacteristics = le16_to_cpu(hub->descriptor->wHubCharacteristics);
-
 	/* FIXME for USB 3.0, skip for now */
 	if ((wHubCharacteristics & HUB_CHAR_COMPOUND) &&
 			!(hub_is_superspeed(hdev))) {
@@ -1351,9 +1347,9 @@ static int hub_configure(struct usb_hub *hub,
 				? 'F' : 'R';
 		portstr[hdev->maxchild] = 0;
 		dev_dbg(hub_dev, "compound device; port removable status: %s\n", portstr);
-	} else
+	} else {
 		dev_dbg(hub_dev, "standalone hub\n");
-
+		}
 	switch (wHubCharacteristics & HUB_CHAR_LPSM) {
 	case HUB_CHAR_COMMON_LPSM:
 		dev_dbg(hub_dev, "ganged power switching\n");
@@ -1684,7 +1680,7 @@ descriptor_error:
 		goto descriptor_error;
 
 	/* We found a hub */
-	dev_info (&intf->dev, "USB hub found\n");
+	dev_dbg (&intf->dev, "USB hub found\n");
 
 	hub = kzalloc(sizeof(*hub), GFP_KERNEL);
 	if (!hub) {
@@ -1711,7 +1707,6 @@ descriptor_error:
 
 	if (hub_configure(hub, endpoint) >= 0)
 		return 0;
-
 	hub_disconnect (intf);
 	return -ENODEV;
 }
@@ -2003,7 +1998,7 @@ void usb_disconnect(struct usb_device **pdev)
 	 * this quiesces everything except pending urbs.
 	 */
 	usb_set_device_state(udev, USB_STATE_NOTATTACHED);
-	dev_info(&udev->dev, "USB disconnect, device number %d\n",
+	dev_dbg(&udev->dev, "USB disconnect, device number %d\n",
 			udev->devnum);
 
 	usb_lock_device(udev);
@@ -2056,10 +2051,10 @@ static void show_string(struct usb_device *udev, char *id, char *string)
 
 static void announce_device(struct usb_device *udev)
 {
-	dev_info(&udev->dev, "New USB device found, idVendor=%04x, idProduct=%04x\n",
+	dev_dbg(&udev->dev, "New USB device found, idVendor=%04x, idProduct=%04x\n",
 		le16_to_cpu(udev->descriptor.idVendor),
 		le16_to_cpu(udev->descriptor.idProduct));
-	dev_info(&udev->dev,
+	dev_dbg(&udev->dev,
 		"New USB device strings: Mfr=%d, Product=%d, SerialNumber=%d\n",
 		udev->descriptor.iManufacturer,
 		udev->descriptor.iProduct,
@@ -2105,7 +2100,7 @@ static int usb_enumerate_device_otg(struct usb_device *udev)
 			if (desc->bmAttributes & USB_OTG_HNP) {
 				unsigned		port1 = udev->portnum;
 
-				dev_info(&udev->dev,
+				dev_dbg(&udev->dev,
 					"Dual-Role OTG device on %sHNP port\n",
 					(port1 == bus->otg_port)
 						? "" : "non-");
@@ -2124,7 +2119,7 @@ static int usb_enumerate_device_otg(struct usb_device *udev)
 					/* OTG MESSAGE: report errors here,
 					 * customize to match your product.
 					 */
-					dev_info(&udev->dev,
+					dev_dbg(&udev->dev,
 						"can't set HNP mode: %d\n",
 						err);
 					bus->b_hnp_enable = 0;
@@ -2407,7 +2402,7 @@ int usb_authorize_device(struct usb_device *usb_dev)
 			 * set other configurations. */
 		}
 	}
-	dev_info(&usb_dev->dev, "authorized to connect\n");
+	dev_dbg(&usb_dev->dev, "authorized to connect\n");
 
 error_enumerate:
 error_device_descriptor:
@@ -3894,7 +3889,7 @@ hub_port_init (struct usb_hub *hub, struct usb_device *udev, int port1,
 		speed = usb_speed_string(udev->speed);
 
 	if (udev->speed != USB_SPEED_SUPER)
-		dev_info(&udev->dev,
+		dev_dbg(&udev->dev,
 				"%s %s USB device number %d using %s\n",
 				(udev->config) ? "reset" : "new", speed,
 				devnum, udev->bus->controller->driver->name);
@@ -4008,7 +4003,7 @@ hub_port_init (struct usb_hub *hub, struct usb_device *udev, int port1,
 			}
 			if (udev->speed == USB_SPEED_SUPER) {
 				devnum = udev->devnum;
-				dev_info(&udev->dev,
+				dev_dbg(&udev->dev,
 						"%s SuperSpeed USB device number %d using %s\n",
 						(udev->config) ? "reset" : "new",
 						devnum, udev->bus->controller->driver->name);
@@ -4120,7 +4115,7 @@ check_highspeed (struct usb_hub *hub, struct usb_device *udev, int port1)
 	status = usb_get_descriptor (udev, USB_DT_DEVICE_QUALIFIER, 0,
 			qual, sizeof *qual);
 	if (status == sizeof *qual) {
-		dev_info(&udev->dev, "not running at top speed; "
+		dev_dbg(&udev->dev, "not running at top speed; "
 			"connect to a high speed hub\n");
 		/* hub LEDs are probably harder to miss than syslog */
 		if (hub->has_indicators) {
@@ -4189,7 +4184,6 @@ static void hub_port_connect_change(struct usb_hub *hub, int port1,
 			le16_to_cpu(hub->descriptor->wHubCharacteristics);
 	struct usb_device *udev;
 	int status, i;
-
 	dev_dbg (hub_dev,
 		"port %d, status %04x, change %04x, %s\n",
 		port1, portstatus, portchange, portspeed(hub, portstatus));
@@ -4538,7 +4532,6 @@ static void hub_events(void)
 			hub->nerrors = 0;
 			hub->error = 0;
 		}
-
 		/* deal with port status changes */
 		for (i = 1; i <= hub->descriptor->bNbrPorts; i++) {
 			if (test_bit(i, hub->busy_bits))
@@ -4936,7 +4929,7 @@ static int usb_reset_and_verify_device(struct usb_device *udev)
  
 	/* Device might have changed firmware (DFU or similar) */
 	if (descriptors_changed(udev, &descriptor)) {
-		dev_info(&udev->dev, "device firmware changed\n");
+		dev_dbg(&udev->dev, "device firmware changed\n");
 		udev->descriptor = descriptor;	/* for disconnect() calls */
 		goto re_enumerate;
   	}
