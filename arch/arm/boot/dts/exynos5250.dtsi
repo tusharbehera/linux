@@ -81,6 +81,11 @@
 		interrupts = <0 96 0>;
 	};
 
+	usbphy {
+		compatible = "samsung,exynos5250-usbphy";
+		reg = <0x12130000 0x100>, <0x12100000 0x100>;
+	};
+
 	ohci {
 		compatible = "samsung,exynos-ohci";
 		reg = <0x12120000 0x100>;
@@ -287,6 +292,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 	};
+
 
 	amba {
 		#address-cells = <1>;
