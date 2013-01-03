@@ -178,6 +178,11 @@ static void __init exynos5_dt_map_io(void)
 		s3c24xx_init_clocks(24000000);
 }
 
+static void exynos5_i2c_setup(void)
+{	/* Setup the low-speed i2c controller interrupts */
+	writel(0x0, EXYNOS5_SYS_I2C_CFG);
+}
+
 static void __init exynos5_dt_machine_init(void)
 {
 	struct device_node *i2c_np;
@@ -202,12 +207,20 @@ static void __init exynos5_dt_machine_init(void)
 		}
 	}
 
+	exynos5_i2c_setup();
+
 	if (of_machine_is_compatible("samsung,exynos5250"))
 		of_platform_populate(NULL, of_default_bus_match_table,
 				     exynos5250_auxdata_lookup, NULL);
 	else if (of_machine_is_compatible("samsung,exynos5440"))
 		of_platform_populate(NULL, of_default_bus_match_table,
 				     exynos5440_auxdata_lookup, NULL);
+}
+
+static void __init exynos5250_dt_machine_init(void)
+{
+	of_platform_populate(NULL, of_default_bus_match_table,
+				exynos5250_auxdata_lookup, NULL);
 }
 
 static char const *exynos5_dt_compat[] __initdata = {
