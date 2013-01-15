@@ -113,7 +113,7 @@ struct task_group {
 
 	atomic_t load_weight;
 	atomic64_t load_avg;
-	atomic_t runnable_avg;
+	atomic_t runnable_avg, usage_avg;
 #endif
 
 #ifdef CONFIG_RT_GROUP_SCHED
@@ -225,12 +225,6 @@ struct cfs_rq {
 #endif
 
 #ifdef CONFIG_SMP
-/*
- * Load-tracking only depends on SMP, FAIR_GROUP_SCHED dependency below may be
- * removed when useful for applications beyond shares distribution (e.g.
- * load-balance).
- */
-#ifdef CONFIG_FAIR_GROUP_SCHED
 	/*
 	 * CFS Load tracking
 	 * Under CFS, load is tracked on a per-entity basis and aggregated up.
@@ -240,10 +234,9 @@ struct cfs_rq {
 	u64 runnable_load_avg, blocked_load_avg;
 	atomic64_t decay_counter, removed_load;
 	u64 last_decay;
-#endif /* CONFIG_FAIR_GROUP_SCHED */
-/* These always depend on CONFIG_FAIR_GROUP_SCHED */
+
 #ifdef CONFIG_FAIR_GROUP_SCHED
-	u32 tg_runnable_contrib;
+	u32 tg_runnable_contrib, tg_usage_contrib;
 	u64 tg_load_contrib;
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
@@ -425,6 +418,9 @@ struct rq {
 	int active_balance;
 	int push_cpu;
 	struct cpu_stop_work active_balance_work;
+#ifdef CONFIG_SCHED_HMP
+	struct task_struct *migrate_task;
+#endif
 	/* cpu of this runqueue: */
 	int cpu;
 	int online;
@@ -546,6 +542,12 @@ DECLARE_PER_CPU(struct sched_domain *, sd_llc);
 DECLARE_PER_CPU(int, sd_llc_id);
 
 extern int group_balance_cpu(struct sched_group *sg);
+
+#ifdef CONFIG_SCHED_HMP
+static LIST_HEAD(hmp_domains);
+DECLARE_PER_CPU(struct hmp_domain *, hmp_cpu_domain);
+#define hmp_cpu_domain(cpu)	(per_cpu(hmp_cpu_domain, (cpu)))
+#endif /* CONFIG_SCHED_HMP */
 
 #endif /* CONFIG_SMP */
 
@@ -877,10 +879,15 @@ extern const struct sched_class idle_sched_class;
 
 extern void trigger_load_balance(struct rq *rq, int cpu);
 extern void idle_balance(int this_cpu, struct rq *this_rq);
+extern void update_packing_domain(int cpu);
 
 #else	/* CONFIG_SMP */
 
 static inline void idle_balance(int cpu, struct rq *rq)
+{
+}
+
+static inline void update_packing_domain(int cpu)
 {
 }
 
