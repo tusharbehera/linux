@@ -284,7 +284,7 @@ static int exynos_ohci_resume(struct device *dev)
 	/* Mark hardware accessible again as we are out of D3 state by now */
 	set_bit(HCD_FLAG_HW_ACCESSIBLE, &hcd->flags);
 
-	ohci_finish_controller_resume(hcd);
+	ohci_resume(hcd, false);
 
 	return 0;
 }
