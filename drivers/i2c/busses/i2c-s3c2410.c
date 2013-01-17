@@ -1126,7 +1126,7 @@ static int s3c24xx_i2c_probe(struct platform_device *pdev)
 		i2c->irq = ret = platform_get_irq(pdev, 0);
 		if (ret <= 0) {
 			dev_err(&pdev->dev, "cannot find IRQ\n");
-			goto err_iomap;
+			goto err_clk;
 		}
 
 		ret = request_irq(i2c->irq, s3c24xx_i2c_irq, 0,
@@ -1134,7 +1134,7 @@ static int s3c24xx_i2c_probe(struct platform_device *pdev)
 
 		if (ret != 0) {
 			dev_err(&pdev->dev, "cannot claim IRQ %d\n", i2c->irq);
-			goto err_iomap;
+			goto err_clk;
 		}
 	}
 
