@@ -302,7 +302,7 @@ static void bcmsdh_pci_remove(struct pci_dev *pdev);
 /**
  * pci id table
  */
-static struct pci_device_id bcmsdh_pci_devid[] __devinitdata = {
+static struct pci_device_id bcmsdh_pci_devid[] = {
 	{ vendor: PCI_ANY_ID,
 	device: PCI_ANY_ID,
 	subvendor: PCI_ANY_ID,
