@@ -662,10 +662,6 @@ static int s3c24xx_i2c_doxfer(struct s3c24xx_i2c *i2c,
 	s3c24xx_i2c_enable_irq(i2c);
 	s3c24xx_i2c_message_start(i2c, msgs);
 
-	/* For QUIRK_HDMIPHY, bus is already disabled */
-	if (i2c->quirks & QUIRK_HDMIPHY)
-		goto out;
-
 	if (!(i2c->quirks & QUIRK_SATAPHY)) {
 
 		timeout = wait_event_timeout(i2c->wait,
@@ -681,10 +677,10 @@ static int s3c24xx_i2c_doxfer(struct s3c24xx_i2c *i2c,
 		else if (ret != num)
 			dev_dbg(i2c->dev, "incomplete xfer (%d)\n", ret);
 
-		/* ensure the stop has been through the bus */
+		/* For QUIRK_HDMIPHY, bus is already disabled */
+		if (i2c->quirks & QUIRK_HDMIPHY)
+			goto out;
 	}
-
-	dev_dbg(i2c->dev, "waiting for bus idle\n");
 
 	s3c24xx_i2c_wait_idle(i2c);
 
