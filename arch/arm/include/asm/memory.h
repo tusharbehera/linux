@@ -18,6 +18,7 @@
 #include <linux/types.h>
 #include <linux/sizes.h>
 
+#include <asm/cache.h>
 #include <asm/runtime-patch.h>
 
 #ifdef CONFIG_NEED_MACH_MEMORY_H
@@ -151,11 +152,11 @@
  * gives us about 38-bits or so.
  */
 #ifdef CONFIG_ARM_LPAE
-#define ARCH_PGD_SHIFT         L1_CACHE_SHIFT
+#define ARCH_PGD_SHIFT		L1_CACHE_SHIFT
 #else
-#define ARCH_PGD_SHIFT         0
+#define ARCH_PGD_SHIFT		0
 #endif
-#define ARCH_PGD_MASK          ((1 << ARCH_PGD_SHIFT) - 1)
+#define ARCH_PGD_MASK		((1 << ARCH_PGD_SHIFT) - 1)
 
 #ifndef __ASSEMBLY__
 
