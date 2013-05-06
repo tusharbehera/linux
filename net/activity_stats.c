@@ -59,30 +59,27 @@ void activity_stats_update(void)
 	spin_unlock_irqrestore(&activity_lock, flags);
 }
 
-static int activity_stats_read_proc(char *page, char **start, off_t off,
-					int count, int *eof, void *data)
+static int proc_activity_stats_show(struct seq_file *m, void *v)
 {
 	int i;
-	int len;
-	char *p = page;
 
-	/* Only print if offset is 0, or we have enough buffer space */
-	if (off || count < (30 * BUCKET_MAX + 22))
-		return -ENOMEM;
-
-	len = snprintf(p, count, "Min Bucket(sec) Count\n");
-	count -= len;
-	p += len;
-
-	for (i = 0; i < BUCKET_MAX; i++) {
-		len = snprintf(p, count, "%15d %lu\n", 1 << i, activity_stats[i]);
-		count -= len;
-		p += len;
-	}
-	*eof = 1;
-
-	return p - page;
+	seq_printf(m, "Min Bucket(sec) Count\n");
+	for (i = 0; i < BUCKET_MAX; i++)
+		seq_printf(m, "%15d %lu\n", 1 << i, activity_stats[i]);
+	return 0;
 }
+
+static int proc_status_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, proc_activity_stats_show, PDE_DATA(inode));
+}
+
+static const struct file_operations proc_status_fops = {
+	.open           = proc_status_open,
+	.read           = seq_read,
+	.llseek         = seq_lseek,
+	.release        = seq_release,
+};
 
 static int activity_stats_notifier(struct notifier_block *nb,
 					unsigned long event, void *dummy)
@@ -106,8 +103,9 @@ static struct notifier_block activity_stats_notifier_block = {
 
 static int  __init activity_stats_init(void)
 {
-	create_proc_read_entry("activity", S_IRUGO,
-			init_net.proc_net_stat, activity_stats_read_proc, NULL);
+	if (!proc_create("activity", S_IRUGO, init_net.proc_net_stat,
+			&proc_status_fops))
+		return -ENOMEM;
 	return register_pm_notifier(&activity_stats_notifier_block);
 }
 
