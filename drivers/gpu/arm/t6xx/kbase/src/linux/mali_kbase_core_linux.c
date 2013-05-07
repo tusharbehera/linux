@@ -2710,6 +2710,8 @@ static int __init kbase_driver_init(void)
 		return err;
 	}
 
+	printk(KERN_INFO "MALI-604 successfully initiazed\n");
+
 	return 0;
 }
 
