@@ -253,6 +253,7 @@ static int s3c_fb_check_var(struct fb_var_screeninfo *var,
 	struct s3c_fb *sfb = win->parent;
 
 	dev_dbg(sfb->dev, "checking parameters\n");
+	printk("trb: %s() called\n", __func__);
 
 	var->xres_virtual = max(var->xres_virtual, var->xres);
 	var->yres_virtual = max(var->yres_virtual, var->yres);
@@ -505,6 +506,7 @@ static int s3c_fb_set_par(struct fb_info *info)
 	u32 pagewidth;
 
 	dev_dbg(sfb->dev, "setting framebuffer parameters\n");
+	printk("trb: %s() called\n", __func__);
 
 	pm_runtime_get_sync(sfb->dev);
 
@@ -758,6 +760,7 @@ static int s3c_fb_setcolreg(unsigned regno,
 		__func__, win->index, regno, red, green, blue);
 
 	pm_runtime_get_sync(sfb->dev);
+	printk("trb: %s() called\n", __func__);
 
 	switch (info->fix.visual) {
 	case FB_VISUAL_TRUECOLOR:
@@ -810,6 +813,7 @@ static int s3c_fb_blank(int blank_mode, struct fb_info *info)
 	u32 output_on = sfb->output_on;
 
 	dev_dbg(sfb->dev, "blank mode %d\n", blank_mode);
+	printk("trb: %s() called\n", __func__);
 
 	pm_runtime_get_sync(sfb->dev);
 
@@ -879,6 +883,7 @@ static int s3c_fb_pan_display(struct fb_var_screeninfo *var,
 	void __iomem *buf	= sfb->regs + win->index * 8;
 	unsigned int start_boff, end_boff;
 
+	printk("trb: %s() called\n", __func__);
 	pm_runtime_get_sync(sfb->dev);
 
 	/* Offset in bytes to the start of the displayed area */
@@ -1056,6 +1061,7 @@ static int s3c_fb_ioctl(struct fb_info *info, unsigned int cmd,
 	int ret;
 	u32 crtc;
 
+	printk("trb: %s() called, cmd = %x\n", __func__, cmd);
 	switch (cmd) {
 	case FBIO_WAITFORVSYNC:
 		if (get_user(crtc, (u32 __user *)arg)) {
@@ -1077,6 +1083,7 @@ static int s3c_fb_ioctl(struct fb_info *info, unsigned int cmd,
 
 int s3c_fb_open(struct fb_info *info, int user)
 {
+	printk("trb: %s() called\n", __func__);
 	s3c_fb_set_par(info);
 	return 0;
 }
@@ -1088,6 +1095,7 @@ int s3c_fb_release(struct fb_info *info, int user)
 	void __iomem *regs = sfb->regs;
 	int win_no = win->index;
 
+	printk("trb: %s() called\n", __func__);
 	if (win_no != 2) {
 		printk(KERN_DEBUG"Releasing window %d\n", win_no);
 		writel(0, regs + WINCON(win_no));

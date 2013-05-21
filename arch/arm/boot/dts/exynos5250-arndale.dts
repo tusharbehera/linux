@@ -466,6 +466,13 @@
 			samsung,fimd-win-res = <1024 600>;
 			samsung,fimd-win-vres = <1024 600>;
 		};
+
+		window2 {
+			samsung,fimd-win-id = <2>;
+			samsung,fimd-win-bpp = <32 24>;
+			samsung,fimd-win-res = <1024 600>;
+			samsung,fimd-win-vres = <1024 600>;
+		};
 	};
 
 	gpio_keys {
