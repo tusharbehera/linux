@@ -2361,9 +2361,9 @@ static void print_func_help_header(struct trace_buffer *buf, struct seq_file *m)
 	seq_puts(m, "#              | |       |          |         |\n");
 }
 
-static void print_func_help_header_tgid(struct trace_array *tr, struct seq_file *m)
+static void print_func_help_header_tgid(struct trace_buffer *buf, struct seq_file *m)
 {
-	print_event_info(tr, m);
+	print_event_info(buf, m);
 	seq_puts(m, "#           TASK-PID    TGID   CPU#      TIMESTAMP  FUNCTION\n");
 	seq_puts(m, "#              | |        |      |          |         |\n");
 }
@@ -2380,9 +2380,9 @@ static void print_func_help_header_irq(struct trace_buffer *buf, struct seq_file
 	seq_puts(m, "#              | |       |   ||||       |         |\n");
 }
 
-static void print_func_help_header_irq_tgid(struct trace_array *tr, struct seq_file *m)
+static void print_func_help_header_irq_tgid(struct trace_buffer *buf, struct seq_file *m)
 {
-	print_event_info(tr, m);
+	print_event_info(buf, m);
 	seq_puts(m, "#                                      _-----=> irqs-off\n");
 	seq_puts(m, "#                                     / _----=> need-resched\n");
 	seq_puts(m, "#                                    | / _---=> hardirq/softirq\n");
@@ -2693,14 +2693,14 @@ void trace_default_header(struct seq_file *m)
 		if (!(trace_flags & TRACE_ITER_VERBOSE)) {
 			if (trace_flags & TRACE_ITER_IRQ_INFO)
 				if (trace_flags & TRACE_ITER_TGID)
-					print_func_help_header_irq_tgid(iter->tr, m);
+					print_func_help_header_irq_tgid(iter->trace_buffer, m);
 				else
-					print_func_help_header_irq(iter->tr, m);
+					print_func_help_header_irq(iter->trace_buffer, m);
 			else
 				if (trace_flags & TRACE_ITER_TGID)
-					print_func_help_header_tgid(iter->tr, m);
+					print_func_help_header_tgid(iter->trace_buffer, m);
 				else
-					print_func_help_header(iter->tr, m);
+					print_func_help_header(iter->trace_buffer, m);
 		}
 	}
 }
