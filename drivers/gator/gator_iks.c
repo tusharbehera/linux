@@ -27,6 +27,9 @@ static void calc_first_cluster_size(void)
 	// Zero is a valid cpuid, so initialize the array to 0xff's
 	memset(&mpidr_cpuids, 0xff, sizeof(mpidr_cpuids));
 
+	if (!of_have_populated_dt())
+		return;
+
 	while ((cn = of_find_node_by_type(cn, "cpu"))) {
 		BUG_ON(mpidr_cpuids_count >= NR_CPUS);
 
