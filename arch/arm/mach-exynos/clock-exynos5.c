@@ -894,21 +894,25 @@ static struct clk exynos5_init_clocks_off[] = {
 		.devname	= "exynos-sysmmu.5",
 		.enable		= &exynos5_clk_ip_gscl_ctrl,
 		.ctrlbit	= (1 << 7),
+		.parent		= &exynos5_init_clocks_off[43],
 	}, {
 		.name		= "sysmmu",
 		.devname	= "exynos-sysmmu.6",
 		.enable		= &exynos5_clk_ip_gscl_ctrl,
 		.ctrlbit	= (1 << 8),
+		.parent		= &exynos5_init_clocks_off[44],
 	}, {
 		.name		= "sysmmu",
 		.devname	= "exynos-sysmmu.7",
 		.enable		= &exynos5_clk_ip_gscl_ctrl,
 		.ctrlbit	= (1 << 9),
+		.parent		= &exynos5_init_clocks_off[45],
 	}, {
 		.name		= "sysmmu",
 		.devname	= "exynos-sysmmu.8",
 		.enable		= &exynos5_clk_ip_gscl_ctrl,
 		.ctrlbit	= (1 << 10),
+		.parent		= &exynos5_init_clocks_off[46],
 	}, {
 		.name		= "sysmmu",
 		.devname	= "exynos-sysmmu.9",
