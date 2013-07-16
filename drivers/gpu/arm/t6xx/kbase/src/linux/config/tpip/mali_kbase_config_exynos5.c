@@ -31,7 +31,6 @@
 #include <linux/fb.h>
 #include <linux/clk.h>
 #include <mach/regs-clock.h>
-#include <mach/pmu.h>
 #include <mach/regs-pmu.h>
 #include <asm/delay.h>
 #include <mach/map.h>
@@ -1873,6 +1872,7 @@ static void kbase_platform_dvfs_set_vol(unsigned int vol)
 	return;
 }
 
+#ifdef CONFIG_T6XX_DVFS
 int kbase_platform_dvfs_get_level(int freq)
 {
 	int i;
@@ -1882,6 +1882,12 @@ int kbase_platform_dvfs_get_level(int freq)
 	}
 	return -1;
 }
+#else
+int kbase_platform_dvfs_get_level(int freq)
+{
+	return -1;
+}
+#endif
 
 #if defined CONFIG_T6XX_DVFS || defined CONFIG_T6XX_DEBUG_SYS
 void kbase_platform_dvfs_set_level(kbase_device *kbdev, int level)

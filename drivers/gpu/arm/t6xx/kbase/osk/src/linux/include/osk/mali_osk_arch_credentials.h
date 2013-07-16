@@ -25,6 +25,7 @@
 #endif
 
 #include <linux/cred.h>
+#include <linux/sched/rt.h>
 
 OSK_STATIC_INLINE mali_bool osk_is_privileged(void)
 {
