@@ -107,7 +107,7 @@ xt_socket_get4_sk(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	const struct iphdr *iph = ip_hdr(skb);
 	struct udphdr _hdr, *hp = NULL;
-	struct sock *sk;
+	struct sock *sk = skb->sk;
 	__be32 uninitialized_var(daddr), uninitialized_var(saddr);
 	__be16 uninitialized_var(dport), uninitialized_var(sport);
 	u8 uninitialized_var(protocol);
@@ -155,7 +155,8 @@ xt_socket_get4_sk(const struct sk_buff *skb, struct xt_action_param *par)
 	}
 #endif
 
-	sk = nf_tproxy_get_sock_v4(dev_net(skb->dev), protocol,
+	if (!sk)
+		sk = nf_tproxy_get_sock_v4(dev_net(skb->dev), protocol,
 				   saddr, daddr, sport, dport, par->in, NFT_LOOKUP_ANY);
 
 	pr_debug("proto %hhu %pI4:%hu -> %pI4:%hu (orig %pI4:%hu) sock %p\n",
@@ -171,15 +172,10 @@ static bool
 socket_match(const struct sk_buff *skb, struct xt_action_param *par,
 	     const struct xt_socket_mtinfo1 *info)
 {
-	struct sock *sk = skb->sk;
+	struct sock *sk;
 
-	if (!sk)
-		sk = xt_socket_get4_sk(skb, par);
+	sk = xt_socket_get4_sk(skb, par);
 
-	if (!sk)
-		sk = nf_tproxy_get_sock_v4(dev_net(skb->dev), protocol,
-					   saddr, daddr, sport, dport,
-					   par->in, NFT_LOOKUP_ANY);
 	if (sk) {
 		bool wildcard;
 		bool transparent = true;
@@ -282,7 +278,7 @@ xt_socket_get6_sk(const struct sk_buff *skb, struct xt_action_param *par)
 {
 	struct ipv6hdr *iph = ipv6_hdr(skb);
 	struct udphdr _hdr, *hp = NULL;
-	struct sock *sk;
+	struct sock *sk = skb->sk;
 	struct in6_addr *daddr = NULL, *saddr = NULL;
 	__be16 uninitialized_var(dport), uninitialized_var(sport);
 	int thoff = 0, uninitialized_var(tproto);
@@ -312,8 +308,10 @@ xt_socket_get6_sk(const struct sk_buff *skb, struct xt_action_param *par)
 		return NULL;
 	}
 
-	sk = nf_tproxy_get_sock_v6(dev_net(skb->dev), tproto,
+	if (!sk)
+		sk = nf_tproxy_get_sock_v6(dev_net(skb->dev), tproto,
 				   saddr, daddr, sport, dport, par->in, NFT_LOOKUP_ANY);
+
 	pr_debug("proto %hhd %pI6:%hu -> %pI6:%hu "
 		 "(orig %pI6:%hu) sock %p\n",
 		 tproto, saddr, ntohs(sport),
@@ -324,19 +322,15 @@ xt_socket_get6_sk(const struct sk_buff *skb, struct xt_action_param *par)
 EXPORT_SYMBOL(xt_socket_get6_sk);
 
 static bool
-socket_mt6_v1(const struct sk_buff *skb, struct xt_action_param *par)
+socket_mt6_v1_v2(const struct sk_buff *skb, struct xt_action_param *par)
 {
-	struct sock *sk = skb->sk;
+	struct sock *sk;
 	const struct xt_socket_mtinfo1 *info;
 
 	info = (struct xt_socket_mtinfo1 *) par->matchinfo;
-	if(!sk)
-		sk = xt_socket_get6_sk(skb, par);
 
-	if (!sk)
-		sk = nf_tproxy_get_sock_v6(dev_net(skb->dev), tproto,
-					   saddr, daddr, sport, dport,
-					   par->in, NFT_LOOKUP_ANY);
+	sk = xt_socket_get6_sk(skb, par);
+
 	if (sk) {
 		bool wildcard;
 		bool transparent = true;
