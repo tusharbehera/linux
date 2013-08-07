@@ -779,11 +779,6 @@ static struct clk exynos5_init_clocks_off[] = {
 		.ctrlbit	= (1 << 3),
 	}, {
 		.name		= "iis",
-		.devname	= "samsung-i2s.0",
-		.enable		= exynos5_clk_audss_ctrl,
-		.ctrlbit	= (3 << 2),
-	}, {
-		.name		= "iis",
 		.devname	= "samsung-i2s.1",
 		.enable		= exynos5_clk_ip_peric_ctrl,
 		.ctrlbit	= (1 << 20),
@@ -1014,6 +1009,11 @@ static struct clk exynos5_init_clocks_off[] = {
 		.devname	= "exynos-sysmmu.14",
 		.enable		= &exynos5_clk_ip_acp_ctrl,
 		.ctrlbit	= (1 << 7)
+	}, {
+		.name		= "iis",
+		.devname	= "samsung-i2s.0",
+		.enable		= exynos5_clk_audss_ctrl,
+		.ctrlbit	= (3 << 2),
 	}, {
 		.name		= "g3d",
 		.enable		= exynos5_clk_ip_g3d_ctrl,
