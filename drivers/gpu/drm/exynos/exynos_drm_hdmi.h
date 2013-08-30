@@ -64,4 +64,15 @@ void exynos_hdmi_drv_attach(struct exynos_drm_hdmi_context *ctx);
 void exynos_mixer_drv_attach(struct exynos_drm_hdmi_context *ctx);
 void exynos_hdmi_ops_register(struct exynos_hdmi_ops *ops);
 void exynos_mixer_ops_register(struct exynos_mixer_ops *ops);
+
+int exynos_hdmiphy_driver_register(void);
+void exynos_hdmiphy_driver_unregister(void);
+
+void exynos_hdmiphy_enable(struct device *dev);
+void exynos_hdmiphy_disable(struct device *dev);
+int exynos_hdmiphy_check_mode(struct device *dev,
+				struct drm_display_mode *mode);
+int exynos_hdmiphy_set_mode(struct device *dev,
+				struct drm_display_mode *mode);
+int exynos_hdmiphy_conf_apply(struct device *dev);
 #endif
