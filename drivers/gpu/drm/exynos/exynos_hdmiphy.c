@@ -30,6 +30,9 @@ struct hdmiphy_context {
 	struct device		*dev;
 	struct hdmiphy_config	*current_conf;
 
+	/* hdmiphy resources */
+	void __iomem		*phy_pow_ctrl_reg;
+
 	struct hdmiphy_config	*confs;
 	unsigned int		nr_confs;
 };
@@ -225,6 +228,49 @@ static struct hdmiphy_config *hdmiphy_find_conf(struct hdmiphy_context *hdata,
 	return NULL;
 }
 
+static int hdmiphy_dt_parse_power_control(struct hdmiphy_context *hdata)
+{
+	struct device_node *phy_pow_ctrl_node;
+	u32 buf[2];
+	int ret = 0;
+
+	phy_pow_ctrl_node = of_get_child_by_name(hdata->dev->of_node,
+			"phy-power-control");
+	if (!phy_pow_ctrl_node) {
+		DRM_ERROR("Failed to find phy power control node\n");
+		ret = -ENODEV;
+		goto fail;
+	}
+
+	/* reg property holds two informations: addr of pmu register, size */
+	if (of_property_read_u32_array(phy_pow_ctrl_node, "reg",
+			(u32 *)&buf, 2)) {
+		DRM_ERROR("faild to get phy power control reg\n");
+		ret = -EINVAL;
+		goto fail;
+	}
+
+	hdata->phy_pow_ctrl_reg = devm_ioremap(hdata->dev, buf[0], buf[1]);
+	if (!hdata->phy_pow_ctrl_reg) {
+		DRM_ERROR("failed to ioremap phy pmu reg\n");
+		ret = -ENOMEM;
+		goto fail;
+	}
+
+fail:
+	of_node_put(phy_pow_ctrl_node);
+	return ret;
+}
+
+static inline void hdmiphy_pow_ctrl_reg_writemask(
+			struct hdmiphy_context *hdata,
+			u32 value, u32 mask)
+{
+	u32 old = readl(hdata->phy_pow_ctrl_reg);
+	value = (value & mask) | (old & ~mask);
+	writel(value, hdata->phy_pow_ctrl_reg);
+}
+
 static int hdmiphy_reg_writeb(struct hdmiphy_context *hdata,
 			u32 reg_offset, u8 value)
 {
@@ -353,6 +399,36 @@ void exynos_hdmiphy_disable(struct device *dev)
 	}
 }
 
+void exynos_hdmiphy_poweron(struct device *dev)
+{
+	struct hdmiphy_context *hdata = dev_get_drvdata(dev);
+
+	DRM_DEBUG_KMS("[%d]\n", __LINE__);
+
+	if (!hdata) {
+		DRM_ERROR("Invalid arg: hdmiphy device pointer.\n");
+		return;
+	}
+
+	hdmiphy_pow_ctrl_reg_writemask(hdata, PMU_HDMI_PHY_ENABLE,
+		PMU_HDMI_PHY_CONTROL_MASK);
+}
+
+void exynos_hdmiphy_poweroff(struct device *dev)
+{
+	struct hdmiphy_context *hdata = dev_get_drvdata(dev);
+
+	DRM_DEBUG_KMS("[%d]\n", __LINE__);
+
+	if (!hdata) {
+		DRM_ERROR("Invalid arg: hdmiphy device pointer.\n");
+		return;
+	}
+
+	hdmiphy_pow_ctrl_reg_writemask(hdata, PMU_HDMI_PHY_DISABLE,
+		PMU_HDMI_PHY_CONTROL_MASK);
+}
+
 int exynos_hdmiphy_conf_apply(struct device *dev)
 {
 	struct hdmiphy_context *hdata = dev_get_drvdata(dev);
@@ -413,6 +489,7 @@ static int hdmiphy_i2c_device_probe(struct i2c_client *client,
 	struct hdmiphy_context *hdata;
 	struct hdmiphy_drv_data *drv;
 	const struct of_device_id *match;
+	int ret;
 
 	DRM_DEBUG_KMS("[%d]\n", __LINE__);
 
@@ -436,6 +513,11 @@ static int hdmiphy_i2c_device_probe(struct i2c_client *client,
 	hdata->nr_confs = drv->count;
 
 	i2c_set_clientdata(client, hdata);
+	ret = hdmiphy_dt_parse_power_control(hdata);
+	if (ret) {
+		DRM_ERROR("failed to map hdmiphy pow control reg.\n");
+		return ret;
+	}
 
 	return 0;
 }

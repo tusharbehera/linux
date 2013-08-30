@@ -68,6 +68,8 @@ void exynos_mixer_ops_register(struct exynos_mixer_ops *ops);
 int exynos_hdmiphy_driver_register(void);
 void exynos_hdmiphy_driver_unregister(void);
 
+void exynos_hdmiphy_poweron(struct device *dev);
+void exynos_hdmiphy_poweroff(struct device *dev);
 void exynos_hdmiphy_enable(struct device *dev);
 void exynos_hdmiphy_disable(struct device *dev);
 int exynos_hdmiphy_check_mode(struct device *dev,
