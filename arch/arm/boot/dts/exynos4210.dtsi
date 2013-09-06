@@ -155,4 +155,28 @@
 			samsung,lcd-wb;
 		};
 	};
+
+	hdmi {
+		compatible = "samsung,exynos4-hdmi";
+		reg = <0x12D00000 0x70000>;
+		interrupts = <0 92 0>;
+
+		clocks = <&clock 271>, <&clock 136>, <&clock 139>,
+				<&clock 178>, <&clock 1024>;
+		clock-names = "hdmi", "sclk_hdmi", "sclk_pixel",
+				"sclk_hdmiphy", "mout_hdmi";
+	};
+
+	mixer {
+		compatible = "samsung,exynos4-mixer";
+		reg = <0x12C10000 0x10000>, <0x12C00000 0x1000>;
+		reg-names = "mxr", "vp";
+		interrupts = <0 91 0>;
+		interrupt-names = "irq";
+
+		clocks = <&clock 269>, <&clock 136>, <&clock 268>,
+			<&clock 137>, <&clock 137>, <&clock 396>;
+		clock-names = "mixer", "sclk_hdmi", "vp",
+			"sclk_mixer", "sclk_dac", "mout_mixer";
+	};
 };

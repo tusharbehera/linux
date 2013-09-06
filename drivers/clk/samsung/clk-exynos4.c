@@ -159,7 +159,7 @@ enum exynos4_clks {
 	sclk_audio1, sclk_audio2, sclk_spdif, sclk_spi0, sclk_spi1, sclk_spi2,
 	sclk_slimbus, sclk_fimd1, sclk_mipi1, sclk_pcm1, sclk_pcm2, sclk_i2s1,
 	sclk_i2s2, sclk_mipihsi, sclk_mfc, sclk_pcm0, sclk_g3d, sclk_pwm_isp,
-	sclk_spi0_isp, sclk_spi1_isp, sclk_uart_isp, sclk_fimg2d,
+	sclk_spi0_isp, sclk_spi1_isp, sclk_uart_isp, sclk_fimg2d, sclk_hdmiphy,
 
 	/* gate clocks */
 	fimc0 = 256, fimc1, fimc2, fimc3, csis0, csis1, jpeg, smmu_fimc0,
@@ -182,7 +182,7 @@ enum exynos4_clks {
 	/* mux clocks */
 	mout_fimc0 = 384, mout_fimc1, mout_fimc2, mout_fimc3, mout_cam0,
 	mout_cam1, mout_csis0, mout_csis1, mout_g3d0, mout_g3d1, mout_g3d,
-	aclk400_mcuisp,
+	aclk400_mcuisp, mout_mixer,
 
 	/* div clocks */
 	div_isp0 = 450, div_isp1, div_mcuisp0, div_mcuisp1, div_aclk200,
@@ -354,7 +354,7 @@ static struct samsung_fixed_rate_clock exynos4_fixed_rate_ext_clks[] __initdata 
 /* fixed rate clocks generated inside the soc */
 static struct samsung_fixed_rate_clock exynos4_fixed_rate_clks[] __initdata = {
 	FRATE(none, "sclk_hdmi24m", NULL, CLK_IS_ROOT, 24000000),
-	FRATE(none, "sclk_hdmiphy", NULL, CLK_IS_ROOT, 27000000),
+	FRATE(sclk_hdmiphy, "sclk_hdmiphy", NULL, CLK_IS_ROOT, 27000000),
 	FRATE(none, "sclk_usbphy0", NULL, CLK_IS_ROOT, 48000000),
 };
 
@@ -389,7 +389,8 @@ static struct samsung_mux_clock exynos4210_mux_clks[] __initdata = {
 	MUX(none, "mout_aclk100", sclk_ampll_p4210, SRC_TOP0, 16, 1),
 	MUX(none, "mout_aclk160", sclk_ampll_p4210, SRC_TOP0, 20, 1),
 	MUX(none, "mout_aclk133", sclk_ampll_p4210, SRC_TOP0, 24, 1),
-	MUX(none, "mout_mixer", mout_mixer_p4210, SRC_TV, 4, 1),
+	MUX(none, "mout_vpllsrc", mout_vpllsrc_p, SRC_TOP1, 0, 1),
+	MUX(mout_mixer, "mout_mixer", mout_mixer_p4210, SRC_TV, 4, 1),
 	MUX(none, "mout_dac", mout_dac_p4210, SRC_TV, 8, 1),
 	MUX(none, "mout_g2d0", sclk_ampll_p4210, E4210_SRC_IMAGE, 0, 1),
 	MUX(none, "mout_g2d1", sclk_evpll_p, E4210_SRC_IMAGE, 4, 1),

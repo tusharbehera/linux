@@ -59,16 +59,6 @@
 		reg = <0x10023C60 0x20>;
 	};
 
-	pd_lcd0: lcd0-power-domain@10023C80 {
-		compatible = "samsung,exynos4210-pd";
-		reg = <0x10023C80 0x20>;
-	};
-
-	pd_tv: tv-power-domain@10023C20 {
-		compatible = "samsung,exynos4210-pd";
-		reg = <0x10023C20 0x20>;
-	};
-
 	pd_cam: cam-power-domain@10023C00 {
 		compatible = "samsung,exynos4210-pd";
 		reg = <0x10023C00 0x20>;
@@ -399,6 +389,16 @@
 		status = "disabled";
 	};
 
+	i2c_8: i2c@138E0000 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "samsung,s3c2440-hdmiphy-i2c";
+		reg = <0x138E0000 0x100>;
+		interrupts = <0 93 0>;
+		clocks = <&clock 325>;
+		clock-names = "i2c";
+	};
+
 	spi_0: spi@13920000 {
 		compatible = "samsung,exynos4210-spi";
 		reg = <0x13920000 0x100>;
@@ -503,7 +503,6 @@
 		interrupts = <11 0>, <11 1>, <11 2>;
 		clocks = <&clock 140>, <&clock 283>;
 		clock-names = "sclk_fimd", "fimd";
-		samsung,power-domain = <&pd_lcd0>;
 		status = "disabled";
 	};
 };
