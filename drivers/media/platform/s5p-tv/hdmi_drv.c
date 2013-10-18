@@ -33,7 +33,6 @@
 #include <linux/regulator/consumer.h>
 #include <linux/of.h>
 #include <linux/v4l2-dv-timings.h>
-#include <linux/of_i2c.h>
 #include <linux/of_gpio.h>
 #include <linux/gpio.h>
 
