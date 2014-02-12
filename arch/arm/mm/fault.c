@@ -554,11 +554,16 @@ do_DataAbort(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 	printk(KERN_ALERT "Unhandled fault: %s (0x%03x) at 0x%08lx\n",
 		inf->name, fsr, addr);
 
+#if 1
+	printk(KERN_ALERT "%s()-%d: Ignoring fault: %s (0x%03x) at 0x%08lx\n",
+		__func__, __LINE__, inf->name, fsr, addr);
+#else
 	info.si_signo = inf->sig;
 	info.si_errno = 0;
 	info.si_code  = inf->code;
 	info.si_addr  = (void __user *)addr;
 	arm_notify_die("", regs, &info, fsr, 0);
+#endif
 }
 
 void __init
