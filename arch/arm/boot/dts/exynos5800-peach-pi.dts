@@ -57,6 +57,30 @@
 		reg = <0x20000000 0x80000000>;
 	};
 
+	panel_lvds: panel-lvds {
+		compatible = "panel-lvds";
+		panel-prepare-delay = <105>;
+		panel-disable-delay = <50>;
+		led-en-gpio = <&gpx2 2 0>;
+		pinctrl-0 = <&dp_backlight_en>;
+
+		display-timings {
+			native-mode = <&timing0>;
+
+			timing0: timing@0 {
+				clock-frequency = <150660000>;
+				hactive = <1920>;
+				vactive = <1080>;
+				hfront-porch = <60>;
+				hback-porch = <172>;
+				hsync-len = <80>;
+				vback-porch = <25>;
+				vfront-porch = <10>;
+				vsync-len = <10>;
+			};
+		};
+	};
+
 	sound {
 		compatible = "google,snow-audio-max98091";
 
@@ -99,6 +123,7 @@
 	samsung,link-rate = <0x0a>;
 	samsung,lane-count = <2>;
 	samsung,hpd-gpio = <&gpx2 6 0>;
+	edp-panel = <&panel_lvds>;
 
 	display-timings {
 		native-mode = <&timing1>;
@@ -207,7 +232,6 @@
 	};
 };
 
-
 &pinctrl_0 {
 	max98091_irq: max98091-irq {
 		samsung,pins = "gpx0-2";
@@ -226,6 +250,13 @@
 	power_key_irq: power-key-irq {
 		samsung,pins = "gpx1-2";
 		samsung,pin-function = <0>;
+		samsung,pin-pud = <0>;
+		samsung,pin-drv = <0>;
+	};
+
+	dp_backlight_en: backlight-en {
+		samsung,pins = "gpx2-2";
+		samsung,pin-function = <1>;
 		samsung,pin-pud = <0>;
 		samsung,pin-drv = <0>;
 	};
