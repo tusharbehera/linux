@@ -75,7 +75,10 @@ static int max_gen_clk_is_prepared(struct clk_hw *hw)
 static unsigned long max_gen_recalc_rate(struct clk_hw *hw,
 					 unsigned long parent_rate)
 {
-	return 32768;
+	if (__clk_is_enabled(hw->clk))
+		return 32768;
+	else
+		return 0;
 }
 
 struct clk_ops max_gen_clk_ops = {
