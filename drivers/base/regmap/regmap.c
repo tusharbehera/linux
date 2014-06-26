@@ -2555,6 +2555,40 @@ int regmap_parse_val(struct regmap *map, const void *buf,
 }
 EXPORT_SYMBOL_GPL(regmap_parse_val);
 
+/**
+ * regmap_reg_copy(): Copy a value from a single register to another one
+ *
+ * @map: Register map to operate on
+ * @dest: Register to copy the value to
+ * @src: Register to copy the value from
+ *
+ * A value of zero will be returned on success, a negative errno will
+ * be returned in error cases.
+ */
+int regmap_reg_copy(struct regmap *map, unsigned int dest, unsigned int src)
+{
+	int val;
+	int ret = 0;
+
+	if (dest == src)
+		return ret;
+
+	if (dest % map->reg_stride ||
+	    src % map->reg_stride)
+		return -EINVAL;
+
+	map->lock(map->lock_arg);
+
+	ret = _regmap_read(map, src, &val);
+	if (!ret)
+		ret = _regmap_write(map, dest, val);
+
+	map->unlock(map->lock_arg);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(regmap_reg_copy);
+
 static int __init regmap_initcall(void)
 {
 	regmap_debugfs_initcall();

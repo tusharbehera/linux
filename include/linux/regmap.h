@@ -445,6 +445,8 @@ int regmap_register_patch(struct regmap *map, const struct reg_default *regs,
 int regmap_parse_val(struct regmap *map, const void *buf,
 				unsigned int *val);
 
+int regmap_reg_copy(struct regmap *map, unsigned int dest, unsigned int src);
+
 static inline bool regmap_reg_in_range(unsigned int reg,
 				       const struct regmap_range *range)
 {
@@ -718,6 +720,13 @@ static inline int regmap_register_patch(struct regmap *map,
 
 static inline int regmap_parse_val(struct regmap *map, const void *buf,
 				unsigned int *val)
+{
+	WARN_ONCE(1, "regmap API is disabled");
+	return -EINVAL;
+}
+
+static inline int regmap_reg_copy(struct regmap *map, unsigned int dest,
+				  unsigned int src)
 {
 	WARN_ONCE(1, "regmap API is disabled");
 	return -EINVAL;
