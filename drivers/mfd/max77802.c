@@ -228,7 +228,7 @@ static int max77802_i2c_probe(struct i2c_client *i2c,
 
 	max77802 = devm_kzalloc(&i2c->dev, sizeof(struct max77802_dev),
 				GFP_KERNEL);
-	if (max77802 == NULL)
+	if (!max77802)
 		return -ENOMEM;
 
 	i2c_set_clientdata(i2c, max77802);
@@ -315,6 +315,12 @@ static int max77802_suspend(struct device *dev)
 	if (device_may_wakeup(dev))
 		enable_irq_wake(max77802->irq);
 
+	/*
+	 * The IRQ must be disabled during suspend since due wakeup
+	 * ordering issues it may be possible that the I2C controller
+	 * is still suspended when the interrupt happens so the IRQ
+	 * handler will fail to read the I2C bus.
+	 */
 	disable_irq(max77802->irq);
 
 	return 0;

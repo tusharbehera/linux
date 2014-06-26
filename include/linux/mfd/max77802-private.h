@@ -228,9 +228,6 @@ enum max77802_rtc_reg {
 	MAX77802_RTC_END		= 0xDF,
 };
 
-#define MAX77802_IRQSRC_PMIC            (0)
-#define MAX77802_IRQSRC_RTC	        BIT(0)
-
 enum max77802_irq_source {
 	PMIC_INT1 = 0,
 	PMIC_INT2,
