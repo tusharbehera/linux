@@ -240,6 +240,14 @@ static int panel_lvds_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static void panel_lvds_shutdown(struct platform_device *pdev)
+{
+	struct panel_lvds *panel = dev_get_drvdata(&pdev->dev);
+
+	panel_lvds_disable(&panel->base);
+	panel_lvds_unprepare(&panel->base);
+}
+
 static const struct of_device_id lvds_panel_dt_match[] = {
 	{ .compatible = "panel-lvds" },
 	{},
@@ -254,6 +262,7 @@ struct platform_driver lvds_panel_driver = {
 	},
 	.probe = panel_lvds_probe,
 	.remove = panel_lvds_remove,
+	.shutdown = panel_lvds_shutdown,
 };
 module_platform_driver(lvds_panel_driver);
 
