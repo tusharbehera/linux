@@ -490,6 +490,21 @@
 	};
 };
 
+&hsi2c_8 {
+	status = "okay";
+	clock-frequency = <333000>;
+
+	trackpad@4b {
+		reg=<0x4b>;
+		compatible="atmel,atmel_mxt_tp";
+		interrupts=<1 0>;
+		interrupt-parent=<&gpx1>;
+		wakeup-source;
+		pinctrl-names = "default";
+		pinctrl-0 = <&trackpad_irq>;
+	};
+};
+
 &hsi2c_9 {
 	status = "okay";
 	clock-frequency = <400000>;
@@ -564,6 +579,13 @@
 
 	tpm_irq: tpm-irq {
 		samsung,pins = "gpx1-0";
+		samsung,pin-function = <0>;
+		samsung,pin-pud = <0>;
+		samsung,pin-drv = <0>;
+	};
+
+	trackpad_irq: trackpad-irq {
+		samsung,pins = "gpx1-1";
 		samsung,pin-function = <0>;
 		samsung,pin-pud = <0>;
 		samsung,pin-drv = <0>;
